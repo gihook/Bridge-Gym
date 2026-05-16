@@ -155,8 +155,8 @@ public class ExerciseController : Controller
             return NotFound();
         }
 
-        var allSessions = _context.GameSessions
-            .Where(s => s.UserId == userId && s.Mode == session.Mode)
+        var allSessions = _context
+            .GameSessions.Where(s => s.UserId == userId && s.Mode == session.Mode)
             .OrderByDescending(s => s.Date)
             .Take(10)
             .ToList();
@@ -169,8 +169,8 @@ public class ExerciseController : Controller
     public IActionResult HistorySimple()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var sessions = _context.GameSessions
-            .Where(s => s.UserId == userId && s.Mode == ExerciseMode.Simple)
+        var sessions = _context
+            .GameSessions.Where(s => s.UserId == userId && s.Mode == ExerciseMode.Simple)
             .OrderByDescending(s => s.Date)
             .ToList();
 
@@ -183,8 +183,8 @@ public class ExerciseController : Controller
     public IActionResult HistoryDefence()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var sessions = _context.GameSessions
-            .Where(s => s.UserId == userId && s.Mode == ExerciseMode.Defence)
+        var sessions = _context
+            .GameSessions.Where(s => s.UserId == userId && s.Mode == ExerciseMode.Defence)
             .OrderByDescending(s => s.Date)
             .ToList();
 
@@ -192,4 +192,4 @@ public class ExerciseController : Controller
         ViewBag.Mode = ExerciseMode.Defence;
         return View("History", sessions);
     }
-    }
+}
