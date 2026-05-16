@@ -205,6 +205,7 @@
     <input type="hidden" name="totalHands" value="@Model.TotalHandsInSession">
     <input type="hidden" name="totalTime" id="totalTimeInput">
     <input type="hidden" name="handTimes" id="handTimesInput" value="@ViewBag.HandTimes">
+    <input type="hidden" name="correctAnswers" id="correctAnswersInput" value="@ViewBag.CorrectAnswers">
 </form>
 
 @functions {
@@ -240,30 +241,41 @@
         }, 100);
 
         function submitAnswer() {
-            let answer = parseInt(document.getElementById('hcpInput').value);
+            let input = document.getElementById('hcpInput');
+            let answer = parseInt(input.value);
             let feedback = document.getElementById('feedback');
             
+            if (isNaN(answer)) {
+                feedback.innerText = "Please enter a number.";
+                feedback.className = "mt-2 text-warning fw-bold";
+                return;
+            }
+
+            clearInterval(timerInterval);
+            let handTime = (Date.now() - startTime) / 1000;
+            let newTotalTime = currentSessionTotalTime + handTime;
+            
+            let correctCount = parseInt(document.getElementById('correctAnswersInput').value);
             if (answer === expectedHcp) {
-                clearInterval(timerInterval);
-                let handTime = (Date.now() - startTime) / 1000;
-                let newTotalTime = currentSessionTotalTime + handTime;
-                
                 feedback.innerText = "Correct!";
                 feedback.className = "mt-2 text-success fw-bold";
-                
-                document.getElementById('totalTimeInput').value = newTotalTime;
-                let currentHandTimes = document.getElementById('handTimesInput').value;
-                document.getElementById('handTimesInput').value = currentHandTimes ? currentHandTimes + "," + handTime : handTime;
-                
-                setTimeout(() => {
-                    document.getElementById('nextHandForm').submit();
-                }, 500);
+                correctCount++;
             } else {
-                feedback.innerText = "Incorrect, try again.";
+                feedback.innerText = "Incorrect! Expected: " + expectedHcp;
                 feedback.className = "mt-2 text-danger fw-bold";
-                document.getElementById('hcpInput').value = '';
-                document.getElementById('hcpInput').focus();
             }
+            
+            document.getElementById('totalTimeInput').value = newTotalTime;
+            document.getElementById('correctAnswersInput').value = correctCount;
+            let currentHandTimes = document.getElementById('handTimesInput').value;
+            document.getElementById('handTimesInput').value = currentHandTimes ? currentHandTimes + "," + handTime : handTime;
+            
+            input.disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+
+            setTimeout(() => {
+                document.getElementById('nextHandForm').submit();
+            }, 800);
         }
 
         document.getElementById('submitBtn').addEventListener('click', submitAnswer);

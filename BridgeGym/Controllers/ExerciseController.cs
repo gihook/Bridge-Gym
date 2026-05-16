@@ -31,26 +31,27 @@ public class ExerciseController : Controller
     {
         if (numHands <= 0) numHands = 10;
         
-        return RedirectToAction("Play", new { handIndex = 1, totalHands = numHands, totalTime = 0.0, handTimes = "" });
+        return RedirectToAction("Play", new { handIndex = 1, totalHands = numHands, totalTime = 0.0, handTimes = "", correctAnswers = 0 });
     }
 
     [HttpGet]
-    public IActionResult Play(int handIndex, int totalHands, double totalTime, string handTimes = "")
+    public IActionResult Play(int handIndex, int totalHands, double totalTime, int correctAnswers, string handTimes = "")
     {
         if (handIndex > totalHands)
         {
-            return RedirectToAction("SaveResult", new { totalHands, totalTime, handTimes });
+            return RedirectToAction("SaveResult", new { totalHands, totalTime, handTimes, correctAnswers });
         }
 
         var viewModel = _exerciseService.GenerateHand(handIndex, totalHands);
         viewModel.CurrentSessionTotalTime = totalTime;
         ViewBag.HandTimes = handTimes;
+        ViewBag.CorrectAnswers = correctAnswers;
         
         return View(viewModel);
     }
 
     [HttpGet]
-    public async Task<IActionResult> SaveResult(int totalHands, double totalTime, string handTimes = "")
+    public async Task<IActionResult> SaveResult(int totalHands, double totalTime, int correctAnswers, string handTimes = "")
     {
         double minTime = 0;
         double maxTime = 0;
@@ -79,7 +80,8 @@ public class ExerciseController : Controller
             TotalTimeSeconds = totalTime,
             MinTimeSeconds = minTime,
             MaxTimeSeconds = maxTime,
-            StdDevTimeSeconds = stdDev
+            StdDevTimeSeconds = stdDev,
+            CorrectAnswersCount = correctAnswers
         };
 
         _context.GameSessions.Add(session);

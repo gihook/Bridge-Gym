@@ -13,4 +13,5 @@ public class GameSession
     public double MinTimeSeconds { get; set; }
     public double MaxTimeSeconds { get; set; }
     public double StdDevTimeSeconds { get; set; }
+    public int CorrectAnswersCount { get; set; }
 }
