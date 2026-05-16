@@ -1,14 +1,17 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using BridgeGym.Data;
 using BridgeGym.Models;
 using BridgeGym.Services;
-using BridgeGym.Data;
-using System;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BridgeGym.Controllers;
 
+[Authorize]
 public class ExerciseController : Controller
 {
     private readonly IExerciseService _exerciseService;
@@ -27,31 +30,66 @@ public class ExerciseController : Controller
     }
 
     [HttpPost]
-    public IActionResult StartSession(int numHands)
+    public IActionResult StartSession(int numHands, ExerciseMode mode)
     {
-        if (numHands <= 0) numHands = 10;
-        
-        return RedirectToAction("Play", new { handIndex = 1, totalHands = numHands, totalTime = 0.0, handTimes = "", correctAnswers = 0 });
+        if (numHands <= 0)
+            numHands = 10;
+
+        return RedirectToAction(
+            "Play",
+            new
+            {
+                handIndex = 1,
+                totalHands = numHands,
+                totalTime = 0.0,
+                handTimes = "",
+                correctAnswers = 0,
+                mode = mode,
+            }
+        );
     }
 
     [HttpGet]
-    public IActionResult Play(int handIndex, int totalHands, double totalTime, int correctAnswers, string handTimes = "")
+    public IActionResult Play(
+        int handIndex,
+        int totalHands,
+        double totalTime,
+        int correctAnswers,
+        ExerciseMode mode,
+        string handTimes = ""
+    )
     {
         if (handIndex > totalHands)
         {
-            return RedirectToAction("SaveResult", new { totalHands, totalTime, handTimes, correctAnswers });
+            return RedirectToAction(
+                "SaveResult",
+                new
+                {
+                    totalHands,
+                    totalTime,
+                    handTimes,
+                    correctAnswers,
+                    mode,
+                }
+            );
         }
 
-        var viewModel = _exerciseService.GenerateHand(handIndex, totalHands);
+        var viewModel = _exerciseService.GenerateHand(handIndex, totalHands, mode);
         viewModel.CurrentSessionTotalTime = totalTime;
         ViewBag.HandTimes = handTimes;
         ViewBag.CorrectAnswers = correctAnswers;
-        
+
         return View(viewModel);
     }
 
     [HttpGet]
-    public async Task<IActionResult> SaveResult(int totalHands, double totalTime, int correctAnswers, string handTimes = "")
+    public async Task<IActionResult> SaveResult(
+        int totalHands,
+        double totalTime,
+        int correctAnswers,
+        ExerciseMode mode,
+        string handTimes = ""
+    )
     {
         double minTime = 0;
         double maxTime = 0;
@@ -59,19 +97,33 @@ public class ExerciseController : Controller
 
         if (!string.IsNullOrEmpty(handTimes))
         {
-            var times = handTimes.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                 .Select(t => double.TryParse(t, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val) ? val : 0)
-                                 .ToList();
+            var times = handTimes
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(t =>
+                    double.TryParse(
+                        t,
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out double val
+                    )
+                        ? val
+                        : 0
+                )
+                .ToList();
 
             if (times.Any())
             {
                 minTime = times.Min();
                 maxTime = times.Max();
                 double avg = times.Average();
-                double sumOfSquaresOfDifferences = times.Select(val => (val - avg) * (val - avg)).Sum();
+                double sumOfSquaresOfDifferences = times
+                    .Select(val => (val - avg) * (val - avg))
+                    .Sum();
                 stdDev = Math.Sqrt(sumOfSquaresOfDifferences / times.Count);
             }
         }
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         var session = new GameSession
         {
@@ -81,7 +133,9 @@ public class ExerciseController : Controller
             MinTimeSeconds = minTime,
             MaxTimeSeconds = maxTime,
             StdDevTimeSeconds = stdDev,
-            CorrectAnswersCount = correctAnswers
+            CorrectAnswersCount = correctAnswers,
+            Mode = mode,
+            UserId = userId,
         };
 
         _context.GameSessions.Add(session);
@@ -93,9 +147,20 @@ public class ExerciseController : Controller
     [HttpGet]
     public async Task<IActionResult> Results(int sessionId)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var session = await _context.GameSessions.FindAsync(sessionId);
-        var allSessions = _context.GameSessions.OrderByDescending(s => s.Date).Take(10).ToList();
-        
+
+        if (session == null || session.UserId != userId)
+        {
+            return NotFound();
+        }
+
+        var allSessions = _context
+            .GameSessions.Where(s => s.UserId == userId)
+            .OrderByDescending(s => s.Date)
+            .Take(10)
+            .ToList();
+
         ViewBag.AllSessions = allSessions;
         return View(session);
     }

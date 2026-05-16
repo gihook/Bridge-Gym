@@ -129,7 +129,7 @@
         <div class="row w-100 m-0 table-row-top">
             <!-- West/East Dummy Logic -->
             <div class="col-md-4 dummy-col text-center text-md-end mb-3 mb-md-0">
-                @if (Model.DummyPosition == "West")
+                @if (Model.Mode == BridgeGym.Models.ExerciseMode.Defence && Model.DummyPosition == "West")
                 {
                     <div class="bbo-hand">
                         <div class="hand-header">Dummy (West)</div>
@@ -150,7 +150,7 @@
             <!-- Center Input Area -->
             <div class="col-md-4 input-col d-flex justify-content-center align-items-center">
                 <div class="input-area text-center">
-                    <h6 class="mb-2">Remaining HCP?</h6>
+                    <h6 class="mb-2">@(Model.Mode == BridgeGym.Models.ExerciseMode.Simple ? "Your HCP?" : "Remaining HCP?")</h6>
                     <div class="input-group mb-2">
                         <input type="number" id="hcpInput" class="form-control form-control-lg text-center" style="font-weight: bold;" autofocus>
                     </div>
@@ -161,7 +161,7 @@
 
             <!-- East Dummy -->
             <div class="col-md-4 dummy-col text-center text-md-start mb-3 mb-md-0">
-                @if (Model.DummyPosition == "East")
+                @if (Model.Mode == BridgeGym.Models.ExerciseMode.Defence && Model.DummyPosition == "East")
                 {
                     <div class="bbo-hand">
                         <div class="hand-header">Dummy (East)</div>
@@ -206,6 +206,7 @@
     <input type="hidden" name="totalTime" id="totalTimeInput">
     <input type="hidden" name="handTimes" id="handTimesInput" value="@ViewBag.HandTimes">
     <input type="hidden" name="correctAnswers" id="correctAnswersInput" value="@ViewBag.CorrectAnswers">
+    <input type="hidden" name="mode" value="@Model.Mode">
 </form>
 
 @functions {

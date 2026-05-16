@@ -5,13 +5,13 @@
 namespace BridgeGym.Migrations
 {
     /// <inheritdoc />
-    public partial class AddCorrectAnswersCount : Migration
+    public partial class AddExerciseMode : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
-                name: "CorrectAnswersCount",
+                name: "Mode",
                 table: "GameSessions",
                 type: "integer",
                 nullable: false,
@@ -22,7 +22,7 @@ namespace BridgeGym.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(name: "CorrectAnswersCount", table: "GameSessions");
+            migrationBuilder.DropColumn(name: "Mode", table: "GameSessions");
         }
     }
 }

@@ -10,18 +10,35 @@ public class ExerciseService : IExerciseService
 {
     private static readonly Random _random = new();
 
-    public HandExerciseViewModel GenerateHand(int currentHand, int totalHands)
+    public HandExerciseViewModel GenerateHand(int currentHand, int totalHands, ExerciseMode mode)
     {
         var deck = CreateDeck();
         Shuffle(deck);
 
-        var southHand = deck.Take(13).OrderByDescending(c => c.Suit).ThenByDescending(c => c.Rank).ToList();
-        var dummyHand = deck.Skip(13).Take(13).OrderByDescending(c => c.Suit).ThenByDescending(c => c.Rank).ToList();
+        var southHand = deck.Take(13)
+            .OrderByDescending(c => c.Suit)
+            .ThenByDescending(c => c.Rank)
+            .ToList();
+        var dummyHand = new List<Card>();
+        var dummyPosition = "West";
+        int expectedHcp = 0;
 
-        var dummyPosition = _random.Next(2) == 0 ? "West" : "East";
-        
-        int totalHcpShown = southHand.Sum(c => c.HcpValue) + dummyHand.Sum(c => c.HcpValue);
-        int expectedHcp = 40 - totalHcpShown;
+        if (mode == ExerciseMode.Defence)
+        {
+            dummyHand = deck.Skip(13)
+                .Take(13)
+                .OrderByDescending(c => c.Suit)
+                .ThenByDescending(c => c.Rank)
+                .ToList();
+            dummyPosition = _random.Next(2) == 0 ? "West" : "East";
+
+            int totalHcpShown = southHand.Sum(c => c.HcpValue) + dummyHand.Sum(c => c.HcpValue);
+            expectedHcp = 40 - totalHcpShown;
+        }
+        else // Simple mode
+        {
+            expectedHcp = southHand.Sum(c => c.HcpValue);
+        }
 
         return new HandExerciseViewModel
         {
@@ -30,7 +47,8 @@ public class ExerciseService : IExerciseService
             DummyPosition = dummyPosition,
             ExpectedHcp = expectedHcp,
             CurrentHandNumber = currentHand,
-            TotalHandsInSession = totalHands
+            TotalHandsInSession = totalHands,
+            Mode = mode,
         };
     }
 

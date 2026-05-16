@@ -10,6 +10,7 @@
             <h2 class="text-center mb-0">Session Complete!</h2>
         </div>
         <div class="card-body text-center">
+            <h4 class="mb-4 text-muted">@Model.Mode Mode</h4>
             <div class="row mb-4">
                 <div class="col-md-3">
                     <h3>Score</h3>
@@ -58,6 +59,7 @@
                 <thead>
                     <tr>
                         <th>Date</th>
+                        <th>Mode</th>
                         <th>Score</th>
                         <th>Total Time</th>
                         <th>Average</th>
@@ -71,6 +73,7 @@
                     {
                         <tr class="@(session.Id == Model.Id ? "table-success" : "")">
                             <td>@session.Date.ToLocalTime().ToString("g")</td>
+                            <td>@session.Mode</td>
                             <td>@session.CorrectAnswersCount / @session.NumberOfHands</td>
                             <td>@session.TotalTimeSeconds.ToString("F1")s</td>
                             <td>@session.AverageTimePerHand.ToString("F2")s</td>
