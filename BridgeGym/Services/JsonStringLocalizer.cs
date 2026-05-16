@@ -14,7 +14,8 @@ public class JsonStringLocalizer : IStringLocalizer
         if (File.Exists(filePath))
         {
             var json = File.ReadAllText(filePath);
-            _localizationMaps = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new();
+            _localizationMaps =
+                JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new();
         }
         else
         {

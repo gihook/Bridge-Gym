@@ -23,13 +23,17 @@ public class JsonStringLocalizerFactory : IStringLocalizerFactory
     {
         var culture = CultureInfo.CurrentUICulture.Name;
         var path = Path.Combine(_env.ContentRootPath, "Resources", $"{culture}.json");
-        
+
         if (!File.Exists(path))
         {
             // Fallback to two letter ISO language (e.g. en-US -> en.json)
-            path = Path.Combine(_env.ContentRootPath, "Resources", $"{CultureInfo.CurrentUICulture.TwoLetterISOLanguageName}.json");
+            path = Path.Combine(
+                _env.ContentRootPath,
+                "Resources",
+                $"{CultureInfo.CurrentUICulture.TwoLetterISOLanguageName}.json"
+            );
         }
-        
+
         return new JsonStringLocalizer(path);
     }
 }

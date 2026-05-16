@@ -1,33 +1,34 @@
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using BridgeGym.Data;
 using BridgeGym.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
-using Microsoft.AspNetCore.Localization;
-using System.IO;
-using System.Linq;
-using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSingleton<IStringLocalizerFactory, JsonStringLocalizerFactory>();
 builder.Services.AddLocalization();
-builder.Services.AddControllersWithViews()
-    .AddViewLocalization();
+builder.Services.AddControllersWithViews().AddViewLocalization();
 
 builder.Services.AddDbContext<BridgeGymContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => {
-    options.SignIn.RequireConfirmedAccount = false;
-    options.Password.RequireDigit = false;
-    options.Password.RequireLowercase = false;
-    options.Password.RequireUppercase = false;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequiredLength = 4;
-})
+builder
+    .Services.AddDefaultIdentity<IdentityUser>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+        options.Password.RequireDigit = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 4;
+    })
     .AddEntityFrameworkStores<BridgeGymContext>();
 
 builder.Services.AddScoped<IExerciseService, ExerciseService>();
@@ -57,10 +58,15 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     var validCultures = new List<CultureInfo>();
     foreach (var c in supportedCultures)
     {
-        try { validCultures.Add(new CultureInfo(c)); } catch { }
+        try
+        {
+            validCultures.Add(new CultureInfo(c));
+        }
+        catch { }
     }
-    
-    if (!validCultures.Any()) validCultures.Add(new CultureInfo("en"));
+
+    if (!validCultures.Any())
+        validCultures.Add(new CultureInfo("en"));
 
     options.DefaultRequestCulture = new RequestCulture(validCultures[0].Name);
     options.SupportedCultures = validCultures;
@@ -88,8 +94,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Exercise}/{action=Index}/{id?}");
+app.MapControllerRoute(name: "default", pattern: "{controller=Exercise}/{action=Index}/{id?}");
 
 app.Run();
