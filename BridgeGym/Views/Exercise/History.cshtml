@@ -1,0 +1,61 @@
+@model IEnumerable<GameSession>
+@{
+    var title = ViewBag.Title as string ?? "Exercise History";
+    ViewData["Title"] = title;
+    var mode = (ExerciseMode)ViewBag.Mode;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@title</h1>
+        <a asp-action="Index" class="btn btn-outline-primary">Back to Practice</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            You haven't completed any @mode.ToString() sessions yet. 
+            <a asp-action="Index" class="alert-link">Start one now!</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Score</th>
+                        <th>Accuracy</th>
+                        <th>Total Time</th>
+                        <th>Avg/Hand</th>
+                        <th>Min</th>
+                        <th>Max</th>
+                        <th>Std Dev</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var session in Model)
+                    {
+                        <tr>
+                            <td>@session.Date.ToLocalTime().ToString("g")</td>
+                            <td><strong>@session.CorrectAnswersCount</strong> / @session.NumberOfHands</td>
+                            <td>
+                                @{
+                                    var accuracy = session.NumberOfHands > 0 ? (session.CorrectAnswersCount * 100 / session.NumberOfHands) : 0;
+                                    var badgeClass = accuracy >= 90 ? "bg-success" : accuracy >= 70 ? "bg-warning" : "bg-danger";
+                                }
+                                <span class="badge @badgeClass">@accuracy%</span>
+                            </td>
+                            <td>@session.TotalTimeSeconds.ToString("F1")s</td>
+                            <td>@session.AverageTimePerHand.ToString("F2")s</td>
+                            <td class="text-success">@session.MinTimeSeconds.ToString("F2")s</td>
+                            <td class="text-danger">@session.MaxTimeSeconds.ToString("F2")s</td>
+                            <td class="text-info">@session.StdDevTimeSeconds.ToString("F2")s</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
