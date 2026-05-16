@@ -1,0 +1,82 @@
+@model GameSession
+@{
+    ViewData["Title"] = "Bridge Gym - Results";
+    var allSessions = ViewBag.AllSessions as List<GameSession>;
+}
+
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h2 class="text-center mb-0">Session Complete!</h2>
+        </div>
+        <div class="card-body text-center">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <h3>Hands</h3>
+                    <p class="display-6">@Model.NumberOfHands</p>
+                </div>
+                <div class="col-md-4">
+                    <h3>Total Time</h3>
+                    <p class="display-6">@Model.TotalTimeSeconds.ToString("F1")s</p>
+                </div>
+                <div class="col-md-4">
+                    <h3>Average</h3>
+                    <p class="display-6">@Model.AverageTimePerHand.ToString("F2")s</p>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <h5>Min Time</h5>
+                    <p class="h4 text-success">@Model.MinTimeSeconds.ToString("F2")s</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Max Time</h5>
+                    <p class="h4 text-danger">@Model.MaxTimeSeconds.ToString("F2")s</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Std Dev</h5>
+                    <p class="h4 text-info">@Model.StdDevTimeSeconds.ToString("F2")s</p>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <a asp-action="Index" class="btn btn-primary btn-lg">Practice Again</a>
+            </div>
+        </div>
+    </div>
+
+    @if (allSessions != null && allSessions.Any())
+    {
+        <div class="mt-5">
+            <h3>Recent Progress</h3>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Hands</th>
+                        <th>Total Time</th>
+                        <th>Average</th>
+                        <th>Min</th>
+                        <th>Max</th>
+                        <th>Std Dev</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var session in allSessions)
+                    {
+                        <tr class="@(session.Id == Model.Id ? "table-success" : "")">
+                            <td>@session.Date.ToLocalTime().ToString("g")</td>
+                            <td>@session.NumberOfHands</td>
+                            <td>@session.TotalTimeSeconds.ToString("F1")s</td>
+                            <td>@session.AverageTimePerHand.ToString("F2")s</td>
+                            <td>@session.MinTimeSeconds.ToString("F2")s</td>
+                            <td>@session.MaxTimeSeconds.ToString("F2")s</td>
+                            <td>@session.StdDevTimeSeconds.ToString("F2")s</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

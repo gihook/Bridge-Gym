@@ -1,0 +1,25 @@
+@{
+    ViewData["Title"] = "Bridge Gym - Setup";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to Bridge Gym</h1>
+    <p>Practice counting Honour Card Points (HCP) quickly.</p>
+    
+    <div class="card mt-5 mx-auto" style="max-width: 400px;">
+        <div class="card-body">
+            <h5 class="card-title">Start a new session</h5>
+            <form asp-action="StartSession" method="post">
+                <div class="mb-3">
+                    <label for="numHands" class="form-label">Number of hands to practice:</label>
+                    <select name="numHands" id="numHands" class="form-select">
+                        <option value="10">10 hands</option>
+                        <option value="20">20 hands</option>
+                        <option value="30">30 hands</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Start Session</button>
+            </form>
+        </div>
+    </div>
+</div>
