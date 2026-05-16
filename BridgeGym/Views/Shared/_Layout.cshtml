@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Localization
+@using Microsoft.Extensions.Options
+@inject IOptions<RequestLocalizationOptions> LocOptions
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -20,13 +23,36 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Exercise" asp-action="Index">Exercise</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Exercise" asp-action="Index">@Localizer["Exercise"]</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="History" asp-action="Index">History</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="History" asp-action="Index">@Localizer["History"]</a>
                         </li>
                     </ul>
                     <partial name="_LoginPartial" />
+                    <form id="selectLanguage" asp-controller="Language" asp-action="SetLanguage" asp-route-returnUrl="@Context.Request.Path" method="post" class="d-flex align-items-center ms-3">
+                        @{
+                            var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+                            var cultures = LocOptions.Value.SupportedUICultures?.ToList() ?? new List<System.Globalization.CultureInfo>();
+                            
+                            // Safe fallback names in case Linux ICU doesn't know the NativeName
+                            var cultureNames = new Dictionary<string, string>
+                            {
+                                { "en", "English" },
+                                { "es", "Español" },
+                                { "sr", "Srpski" },
+                                { "fr", "Français" },
+                                { "de", "Deutsch" }
+                            };
+                        }
+                        <select name="culture" onchange="this.form.submit();" class="form-select form-select-sm">
+                            @foreach (var culture in cultures)
+                            {
+                                var displayName = cultureNames.ContainsKey(culture.Name) ? cultureNames[culture.Name] : culture.NativeName;
+                                <option value="@culture.Name" selected="@(culture.Name == requestCulture?.RequestCulture.UICulture.Name)">@displayName</option>
+                            }
+                        </select>
+                    </form>
                 </div>
             </div>
         </nav>

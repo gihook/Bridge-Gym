@@ -1,12 +1,12 @@
 @model BridgeGym.Models.HistoryIndexViewModel
 @{
-    ViewData["Title"] = "Your History Dashboard";
+    ViewData["Title"] = Localizer["History Dashboard"];
 }
 
 <div class="container mt-5">
     <div class="text-center mb-5">
-        <h1 class="display-4">History Dashboard</h1>
-        <p class="lead text-muted">Review your overall performance across all exercise modes.</p>
+        <h1 class="display-4">@Localizer["History Dashboard"]</h1>
+        <p class="lead text-muted">@Localizer["Review your overall performance across all exercise modes."]</p>
     </div>
 
     <div class="row">
@@ -15,24 +15,24 @@
             <div class="col-md-4 mb-4">
                 <div class="card h-100 shadow-sm border-0">
                     <div class="card-header bg-dark text-white text-center py-3">
-                        <h4 class="mb-0">@summary.ModeName</h4>
+                        <h4 class="mb-0">@Localizer[summary.ModeName]</h4>
                     </div>
                     <div class="card-body d-flex flex-column">
-                        <p class="text-muted text-center mb-4" style="min-height: 48px;">@summary.Description</p>
+                        <p class="text-muted text-center mb-4" style="min-height: 48px;">@Localizer[summary.Description]</p>
                         
                         <div class="row text-center mb-4 flex-grow-1">
                             <div class="col-6 mb-3">
-                                <h6 class="text-uppercase text-muted small fw-bold">Sessions</h6>
+                                <h6 class="text-uppercase text-muted small fw-bold">@Localizer["Sessions"]</h6>
                                 <span class="h3">@summary.TotalSessions</span>
                             </div>
                             <div class="col-6 mb-3">
-                                <h6 class="text-uppercase text-muted small fw-bold">Avg Speed</h6>
+                                <h6 class="text-uppercase text-muted small fw-bold">@Localizer["Avg Speed"]</h6>
                                 <span class="h3 @(summary.AverageTimePerHand > 0 ? "text-primary" : "")">
                                     @(summary.AverageTimePerHand > 0 ? summary.AverageTimePerHand.ToString("F1") + "s" : "-")
                                 </span>
                             </div>
                             <div class="col-12 mt-2">
-                                <h6 class="text-uppercase text-muted small fw-bold">Avg Accuracy</h6>
+                                <h6 class="text-uppercase text-muted small fw-bold">@Localizer["Avg Accuracy"]</h6>
                                 @{
                                     var accBadge = summary.AverageAccuracy >= 90 ? "bg-success" : summary.AverageAccuracy >= 70 ? "bg-warning" : "bg-danger";
                                 }
@@ -47,7 +47,7 @@
                             </div>
                         </div>
 
-                        <a href="@Url.Action("History" + summary.Mode.ToString(), "Exercise")" class="btn btn-outline-dark w-100 mt-auto">View Detailed History</a>
+                        <a href="@Url.Action("History" + summary.Mode.ToString(), "Exercise")" class="btn btn-outline-dark w-100 mt-auto">@Localizer["View Detailed History"]</a>
                     </div>
                 </div>
             </div>

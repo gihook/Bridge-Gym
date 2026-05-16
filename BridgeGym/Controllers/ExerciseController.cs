@@ -169,8 +169,8 @@ public class ExerciseController : Controller
     public IActionResult HistoryHandHcp()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var sessions = _context.GameSessions
-            .Where(s => s.UserId == userId && s.Mode == ExerciseMode.HandHcp)
+        var sessions = _context
+            .GameSessions.Where(s => s.UserId == userId && s.Mode == ExerciseMode.HandHcp)
             .OrderByDescending(s => s.Date)
             .ToList();
 
@@ -183,8 +183,8 @@ public class ExerciseController : Controller
     public IActionResult HistoryDefenceHcp()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var sessions = _context.GameSessions
-            .Where(s => s.UserId == userId && s.Mode == ExerciseMode.DefenceHcp)
+        var sessions = _context
+            .GameSessions.Where(s => s.UserId == userId && s.Mode == ExerciseMode.DefenceHcp)
             .OrderByDescending(s => s.Date)
             .ToList();
 
@@ -197,8 +197,8 @@ public class ExerciseController : Controller
     public IActionResult HistoryDistribution()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var sessions = _context.GameSessions
-            .Where(s => s.UserId == userId && s.Mode == ExerciseMode.Distribution)
+        var sessions = _context
+            .GameSessions.Where(s => s.UserId == userId && s.Mode == ExerciseMode.Distribution)
             .OrderByDescending(s => s.Date)
             .ToList();
 
@@ -206,4 +206,4 @@ public class ExerciseController : Controller
         ViewBag.Mode = ExerciseMode.Distribution;
         return View("History", sessions);
     }
-    }
+}

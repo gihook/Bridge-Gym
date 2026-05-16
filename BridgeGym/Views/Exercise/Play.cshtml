@@ -121,7 +121,7 @@
 
 <div class="container-fluid px-2 px-md-4">
     <div class="d-flex justify-content-between align-items-center mt-3">
-        <h2 class="h4 h2-md">Hand @Model.CurrentHandNumber/@Model.TotalHandsInSession</h2>
+        <h2 class="h4 h2-md">@Localizer["Hand"] @Model.CurrentHandNumber/@Model.TotalHandsInSession</h2>
         <div id="timer" class="timer-badge">0.0s</div>
     </div>
 
@@ -132,7 +132,7 @@
                 @if (Model.Mode == BridgeGym.Models.ExerciseMode.DefenceHcp && Model.DummyPosition == "West")
                 {
                     <div class="bbo-hand">
-                        <div class="hand-header">Dummy (West)</div>
+                        <div class="hand-header">@Localizer["Dummy (West)"]</div>
                         <div class="hand-body">
                             @foreach (var suit in suits)
                             {
@@ -152,16 +152,16 @@
                 <div class="input-area text-center">
                     @if (Model.Mode == BridgeGym.Models.ExerciseMode.Distribution)
                     {
-                        <h6 class="mb-2">Missing suit length?</h6>
+                        <h6 class="mb-2">@Localizer["Missing suit length?"]</h6>
                     }
                     else
                     {
-                        <h6 class="mb-2">@(Model.Mode == BridgeGym.Models.ExerciseMode.HandHcp ? "Your HCP?" : "Remaining HCP?")</h6>
+                        <h6 class="mb-2">@(Model.Mode == BridgeGym.Models.ExerciseMode.HandHcp ? Localizer["Your HCP?"] : Localizer["Remaining HCP?"])</h6>
                     }
                     <div class="input-group mb-2">
                         <input type="number" id="hcpInput" class="form-control form-control-lg text-center" style="font-weight: bold;" autofocus>
                     </div>
-                    <button class="btn btn-primary w-100" type="button" id="submitBtn">Submit</button>
+                    <button class="btn btn-primary w-100" type="button" id="submitBtn">@Localizer["Submit"]</button>
                     <div id="feedback" class="mt-2 fw-bold" style="height: 20px; font-size: 1rem;"></div>
                 </div>
             </div>
@@ -171,7 +171,7 @@
                 @if (Model.Mode == BridgeGym.Models.ExerciseMode.DefenceHcp && Model.DummyPosition == "East")
                 {
                     <div class="bbo-hand">
-                        <div class="hand-header">Dummy (East)</div>
+                        <div class="hand-header">@Localizer["Dummy (East)"]</div>
                         <div class="hand-body">
                             @foreach (var suit in suits)
                             {
@@ -192,14 +192,14 @@
                 <div class="bbo-hand" style="@(Model.Mode == BridgeGym.Models.ExerciseMode.Distribution ? "max-width: 300px; padding: 20px;" : "")">
                     @if (Model.Mode == BridgeGym.Models.ExerciseMode.Distribution)
                     {
-                        <div class="hand-header">Distribution</div>
+                        <div class="hand-header">@Localizer["Distribution"]</div>
                         <div class="hand-body text-center" style="font-size: 2.5rem; letter-spacing: 15px;">
                             @string.Join("", Model.ShownDistribution)
                         </div>
                     }
                     else
                     {
-                        <div class="hand-header">You (South)</div>
+                        <div class="hand-header">@Localizer["You (South)"]</div>
                         <div class="hand-body">
                             @foreach (var suit in suits)
                             {
@@ -250,7 +250,7 @@
 @section Scripts {
     <script>
         let startTime = Date.now();
-        let currentSessionTotalTime = @Model.CurrentSessionTotalTime;
+        let currentSessionTotalTime = @Model.CurrentSessionTotalTime.ToString(System.Globalization.CultureInfo.InvariantCulture);
         let expectedAnswer = @Model.ExpectedAnswer;
         
         let timerInterval = setInterval(() => {
@@ -258,13 +258,17 @@
             document.getElementById('timer').innerText = elapsed.toFixed(1) + 's';
         }, 100);
 
+        let msgEnterNumber = '@Html.Raw(Localizer["Please enter a number."].Value)';
+        let msgCorrect = '@Html.Raw(Localizer["Correct!"].Value)';
+        let msgIncorrect = '@Html.Raw(Localizer["Incorrect! Expected: "].Value)';
+
         function submitAnswer() {
             let input = document.getElementById('hcpInput');
             let answer = parseInt(input.value);
             let feedback = document.getElementById('feedback');
             
             if (isNaN(answer)) {
-                feedback.innerText = "Please enter a number.";
+                feedback.innerText = msgEnterNumber;
                 feedback.className = "mt-2 text-warning fw-bold";
                 return;
             }
@@ -275,11 +279,11 @@
             
             let correctCount = parseInt(document.getElementById('correctAnswersInput').value);
             if (answer === expectedAnswer) {
-                feedback.innerText = "Correct!";
+                feedback.innerText = msgCorrect;
                 feedback.className = "mt-2 text-success fw-bold";
                 correctCount++;
             } else {
-                feedback.innerText = "Incorrect! Expected: " + expectedAnswer;
+                feedback.innerText = msgIncorrect + expectedAnswer;
                 feedback.className = "mt-2 text-danger fw-bold";
             }
             

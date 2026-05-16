@@ -1,49 +1,49 @@
 @{
-    ViewData["Title"] = "Bridge Gym - Setup";
+    ViewData["Title"] = Localizer["Exercise"];
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome to Bridge Gym</h1>
-    <p>Practice counting Honour Card Points (HCP) quickly.</p>
+    <h1 class="display-4">@Localizer["Welcome to Bridge Gym"]</h1>
+    <p>@Localizer["Practice counting Honour Card Points (HCP) quickly."]</p>
     
     <div class="card mt-5 mx-auto" style="max-width: 500px;">
         <div class="card-body">
-            <h5 class="card-title">Start a new session</h5>
+            <h5 class="card-title">@Localizer["Start a new session"]</h5>
             <form asp-action="StartSession" method="post" class="text-start">
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Exercise Mode:</label>
+                    <label class="form-label fw-bold">@Localizer["Exercise Mode:"]</label>
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="mode" id="modeDefence" value="DefenceHcp" checked>
                         <label class="form-check-label" for="modeDefence">
-                            <strong>Defence HCP Mode</strong><br/>
-                            <small class="text-muted">Count missing HCP when you see South & Dummy.</small>
+                            <strong>@Localizer["Defence HCP Mode"]</strong><br/>
+                            <small class="text-muted">@Localizer["Count missing HCP when you see South & Dummy."]</small>
                         </label>
                     </div>
                     <div class="form-check mt-2">
                         <input class="form-check-input" type="radio" name="mode" id="modeHandHcp" value="HandHcp">
                         <label class="form-check-label" for="modeHandHcp">
-                            <strong>Hand HCP Mode</strong><br/>
-                            <small class="text-muted">Count HCP for just your own hand (South).</small>
+                            <strong>@Localizer["Hand HCP Mode"]</strong><br/>
+                            <small class="text-muted">@Localizer["Count HCP for just your own hand (South)."]</small>
                         </label>
                     </div>
                     <div class="form-check mt-2">
                         <input class="form-check-input" type="radio" name="mode" id="modeDistribution" value="Distribution">
                         <label class="form-check-label" for="modeDistribution">
-                            <strong>Distribution Mode</strong><br/>
-                            <small class="text-muted">Given 3 suit lengths (e.g., 5 3 3), calculate the missing 4th suit length.</small>
+                            <strong>@Localizer["Distribution Mode"]</strong><br/>
+                            <small class="text-muted">@Localizer["Given 3 suit lengths (e.g., 5 3 3), calculate the missing 4th suit length."]</small>
                         </label>
                     </div>
                 </div>
 
                 <div class="mb-4">
-                    <label for="numHands" class="form-label fw-bold">Number of hands to practice:</label>
+                    <label for="numHands" class="form-label fw-bold">@Localizer["Number of hands to practice:"]</label>
                     <select name="numHands" id="numHands" class="form-select">
-                        <option value="10">10 hands</option>
-                        <option value="20">20 hands</option>
-                        <option value="30">30 hands</option>
+                        <option value="10">10 @Localizer["hands"]</option>
+                        <option value="20">20 @Localizer["hands"]</option>
+                        <option value="30">30 @Localizer["hands"]</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary w-100 btn-lg">Start Session</button>
+                <button type="submit" class="btn btn-primary w-100 btn-lg">@Localizer["Start Session"]</button>
             </form>
         </div>
     </div>

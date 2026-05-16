@@ -1,52 +1,52 @@
 @model GameSession
 @{
-    ViewData["Title"] = "Bridge Gym - Results";
+    ViewData["Title"] = Localizer["Session Complete!"];
     var allSessions = ViewBag.AllSessions as List<GameSession>;
 }
 
 <div class="container mt-5">
     <div class="card shadow">
         <div class="card-header bg-success text-white">
-            <h2 class="text-center mb-0">Session Complete!</h2>
+            <h2 class="text-center mb-0">@Localizer["Session Complete!"]</h2>
         </div>
         <div class="card-body text-center">
-            <h4 class="mb-4 text-muted">@Model.Mode Mode</h4>
+            <h4 class="mb-4 text-muted">@Localizer[Model.Mode.ToString() + " Mode"]</h4>
             <div class="row mb-4">
                 <div class="col-md-3">
-                    <h3>Score</h3>
+                    <h3>@Localizer["Score"]</h3>
                     <p class="display-6">@Model.CorrectAnswersCount / @Model.NumberOfHands</p>
                 </div>
                 <div class="col-md-3">
-                    <h3>Accuracy</h3>
+                    <h3>@Localizer["Accuracy"]</h3>
                     <p class="display-6">@(Model.NumberOfHands > 0 ? (Model.CorrectAnswersCount * 100 / Model.NumberOfHands) : 0)%</p>
                 </div>
                 <div class="col-md-3">
-                    <h3>Total Time</h3>
+                    <h3>@Localizer["Total Time"]</h3>
                     <p class="display-6">@Model.TotalTimeSeconds.ToString("F1")s</p>
                 </div>
                 <div class="col-md-3">
-                    <h3>Average</h3>
+                    <h3>@Localizer["Avg/Hand"]</h3>
                     <p class="display-6">@Model.AverageTimePerHand.ToString("F2")s</p>
                 </div>
             </div>
             
             <div class="row mt-4">
                 <div class="col-md-4">
-                    <h5>Min Time</h5>
+                    <h5>@Localizer["Min"]</h5>
                     <p class="h4 text-success">@Model.MinTimeSeconds.ToString("F2")s</p>
                 </div>
                 <div class="col-md-4">
-                    <h5>Max Time</h5>
+                    <h5>@Localizer["Max"]</h5>
                     <p class="h4 text-danger">@Model.MaxTimeSeconds.ToString("F2")s</p>
                 </div>
                 <div class="col-md-4">
-                    <h5>Std Dev</h5>
+                    <h5>@Localizer["Std Dev"]</h5>
                     <p class="h4 text-info">@Model.StdDevTimeSeconds.ToString("F2")s</p>
                 </div>
             </div>
             
             <div class="mt-4">
-                <a asp-action="Index" class="btn btn-primary btn-lg">Practice Again</a>
+                <a asp-action="Index" class="btn btn-primary btn-lg">@Localizer["Practice Again"]</a>
             </div>
         </div>
     </div>
@@ -54,18 +54,18 @@
     @if (allSessions != null && allSessions.Any())
     {
         <div class="mt-5">
-            <h3>Recent Progress</h3>
+            <h3>@Localizer["Recent Progress"]</h3>
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Mode</th>
-                        <th>Score</th>
-                        <th>Total Time</th>
-                        <th>Average</th>
-                        <th>Min</th>
-                        <th>Max</th>
-                        <th>Std Dev</th>
+                        <th>@Localizer["Date"]</th>
+                        <th>@Localizer["Mode"]</th>
+                        <th>@Localizer["Score"]</th>
+                        <th>@Localizer["Total Time"]</th>
+                        <th>@Localizer["Avg/Hand"]</th>
+                        <th>@Localizer["Min"]</th>
+                        <th>@Localizer["Max"]</th>
+                        <th>@Localizer["Std Dev"]</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -73,7 +73,7 @@
                     {
                         <tr class="@(session.Id == Model.Id ? "table-success" : "")">
                             <td>@session.Date.ToLocalTime().ToString("g")</td>
-                            <td>@session.Mode</td>
+                            <td>@Localizer[session.Mode.ToString() + " Mode"]</td>
                             <td>@session.CorrectAnswersCount / @session.NumberOfHands</td>
                             <td>@session.TotalTimeSeconds.ToString("F1")s</td>
                             <td>@session.AverageTimePerHand.ToString("F2")s</td>

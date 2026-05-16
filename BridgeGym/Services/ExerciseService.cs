@@ -44,10 +44,10 @@ public class ExerciseService : IExerciseService
         {
             var suits = Enum.GetValues(typeof(Suit)).Cast<Suit>();
             var distribution = suits.Select(s => southHand.Count(c => c.Suit == s)).ToList();
-            
+
             // Randomize order
             distribution = distribution.OrderBy(x => _random.Next()).ToList();
-            
+
             shownDistribution = distribution.Take(3).ToList();
             expectedAnswer = distribution.Last();
         }
