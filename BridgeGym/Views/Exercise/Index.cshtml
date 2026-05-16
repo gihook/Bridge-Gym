@@ -13,17 +13,24 @@
                 <div class="mb-3">
                     <label class="form-label fw-bold">Exercise Mode:</label>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="mode" id="modeDefence" value="Defence" checked>
+                        <input class="form-check-input" type="radio" name="mode" id="modeDefence" value="DefenceHcp" checked>
                         <label class="form-check-label" for="modeDefence">
-                            <strong>Defence Mode</strong><br/>
+                            <strong>Defence HCP Mode</strong><br/>
                             <small class="text-muted">Count missing HCP when you see South & Dummy.</small>
                         </label>
                     </div>
                     <div class="form-check mt-2">
-                        <input class="form-check-input" type="radio" name="mode" id="modeSimple" value="Simple">
-                        <label class="form-check-label" for="modeSimple">
-                            <strong>Simple Mode</strong><br/>
+                        <input class="form-check-input" type="radio" name="mode" id="modeHandHcp" value="HandHcp">
+                        <label class="form-check-label" for="modeHandHcp">
+                            <strong>Hand HCP Mode</strong><br/>
                             <small class="text-muted">Count HCP for just your own hand (South).</small>
+                        </label>
+                    </div>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="radio" name="mode" id="modeDistribution" value="Distribution">
+                        <label class="form-check-label" for="modeDistribution">
+                            <strong>Distribution Mode</strong><br/>
+                            <small class="text-muted">Given 3 suit lengths (e.g., 5 3 3), calculate the missing 4th suit length.</small>
                         </label>
                     </div>
                 </div>

@@ -8,7 +8,8 @@ public class HandExerciseViewModel
     public List<Card> SouthHand { get; set; } = new();
     public List<Card> DummyHand { get; set; } = new();
     public string DummyPosition { get; set; } = "West"; // West or East
-    public int ExpectedHcp { get; set; }
+    public int ExpectedAnswer { get; set; }
+    public List<int> ShownDistribution { get; set; } = new();
 
     // For tracking the session progress in the view
     public int CurrentHandNumber { get; set; }

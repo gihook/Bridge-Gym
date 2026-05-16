@@ -21,9 +21,10 @@ public class ExerciseService : IExerciseService
             .ToList();
         var dummyHand = new List<Card>();
         var dummyPosition = "West";
-        int expectedHcp = 0;
+        int expectedAnswer = 0;
+        var shownDistribution = new List<int>();
 
-        if (mode == ExerciseMode.Defence)
+        if (mode == ExerciseMode.DefenceHcp)
         {
             dummyHand = deck.Skip(13)
                 .Take(13)
@@ -33,11 +34,22 @@ public class ExerciseService : IExerciseService
             dummyPosition = _random.Next(2) == 0 ? "West" : "East";
 
             int totalHcpShown = southHand.Sum(c => c.HcpValue) + dummyHand.Sum(c => c.HcpValue);
-            expectedHcp = 40 - totalHcpShown;
+            expectedAnswer = 40 - totalHcpShown;
         }
-        else // Simple mode
+        else if (mode == ExerciseMode.HandHcp)
         {
-            expectedHcp = southHand.Sum(c => c.HcpValue);
+            expectedAnswer = southHand.Sum(c => c.HcpValue);
+        }
+        else if (mode == ExerciseMode.Distribution)
+        {
+            var suits = Enum.GetValues(typeof(Suit)).Cast<Suit>();
+            var distribution = suits.Select(s => southHand.Count(c => c.Suit == s)).ToList();
+            
+            // Randomize order
+            distribution = distribution.OrderBy(x => _random.Next()).ToList();
+            
+            shownDistribution = distribution.Take(3).ToList();
+            expectedAnswer = distribution.Last();
         }
 
         return new HandExerciseViewModel
@@ -45,7 +57,8 @@ public class ExerciseService : IExerciseService
             SouthHand = southHand,
             DummyHand = dummyHand,
             DummyPosition = dummyPosition,
-            ExpectedHcp = expectedHcp,
+            ExpectedAnswer = expectedAnswer,
+            ShownDistribution = shownDistribution,
             CurrentHandNumber = currentHand,
             TotalHandsInSession = totalHands,
             Mode = mode,

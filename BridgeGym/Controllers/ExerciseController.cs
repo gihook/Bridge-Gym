@@ -166,30 +166,44 @@ public class ExerciseController : Controller
     }
 
     [HttpGet]
-    public IActionResult HistorySimple()
+    public IActionResult HistoryHandHcp()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var sessions = _context
-            .GameSessions.Where(s => s.UserId == userId && s.Mode == ExerciseMode.Simple)
+        var sessions = _context.GameSessions
+            .Where(s => s.UserId == userId && s.Mode == ExerciseMode.HandHcp)
             .OrderByDescending(s => s.Date)
             .ToList();
 
-        ViewBag.Title = "Simple Mode History";
-        ViewBag.Mode = ExerciseMode.Simple;
+        ViewBag.Title = "Hand HCP History";
+        ViewBag.Mode = ExerciseMode.HandHcp;
         return View("History", sessions);
     }
 
     [HttpGet]
-    public IActionResult HistoryDefence()
+    public IActionResult HistoryDefenceHcp()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var sessions = _context
-            .GameSessions.Where(s => s.UserId == userId && s.Mode == ExerciseMode.Defence)
+        var sessions = _context.GameSessions
+            .Where(s => s.UserId == userId && s.Mode == ExerciseMode.DefenceHcp)
             .OrderByDescending(s => s.Date)
             .ToList();
 
-        ViewBag.Title = "Defence Mode History";
-        ViewBag.Mode = ExerciseMode.Defence;
+        ViewBag.Title = "Defence HCP History";
+        ViewBag.Mode = ExerciseMode.DefenceHcp;
         return View("History", sessions);
     }
-}
+
+    [HttpGet]
+    public IActionResult HistoryDistribution()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var sessions = _context.GameSessions
+            .Where(s => s.UserId == userId && s.Mode == ExerciseMode.Distribution)
+            .OrderByDescending(s => s.Date)
+            .ToList();
+
+        ViewBag.Title = "Distribution History";
+        ViewBag.Mode = ExerciseMode.Distribution;
+        return View("History", sessions);
+    }
+    }

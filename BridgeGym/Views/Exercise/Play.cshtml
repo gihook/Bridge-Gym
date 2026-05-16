@@ -129,7 +129,7 @@
         <div class="row w-100 m-0 table-row-top">
             <!-- West/East Dummy Logic -->
             <div class="col-md-4 dummy-col text-center text-md-end mb-3 mb-md-0">
-                @if (Model.Mode == BridgeGym.Models.ExerciseMode.Defence && Model.DummyPosition == "West")
+                @if (Model.Mode == BridgeGym.Models.ExerciseMode.DefenceHcp && Model.DummyPosition == "West")
                 {
                     <div class="bbo-hand">
                         <div class="hand-header">Dummy (West)</div>
@@ -150,7 +150,14 @@
             <!-- Center Input Area -->
             <div class="col-md-4 input-col d-flex justify-content-center align-items-center">
                 <div class="input-area text-center">
-                    <h6 class="mb-2">@(Model.Mode == BridgeGym.Models.ExerciseMode.Simple ? "Your HCP?" : "Remaining HCP?")</h6>
+                    @if (Model.Mode == BridgeGym.Models.ExerciseMode.Distribution)
+                    {
+                        <h6 class="mb-2">Missing suit length?</h6>
+                    }
+                    else
+                    {
+                        <h6 class="mb-2">@(Model.Mode == BridgeGym.Models.ExerciseMode.HandHcp ? "Your HCP?" : "Remaining HCP?")</h6>
+                    }
                     <div class="input-group mb-2">
                         <input type="number" id="hcpInput" class="form-control form-control-lg text-center" style="font-weight: bold;" autofocus>
                     </div>
@@ -161,7 +168,7 @@
 
             <!-- East Dummy -->
             <div class="col-md-4 dummy-col text-center text-md-start mb-3 mb-md-0">
-                @if (Model.Mode == BridgeGym.Models.ExerciseMode.Defence && Model.DummyPosition == "East")
+                @if (Model.Mode == BridgeGym.Models.ExerciseMode.DefenceHcp && Model.DummyPosition == "East")
                 {
                     <div class="bbo-hand">
                         <div class="hand-header">Dummy (East)</div>
@@ -182,18 +189,28 @@
 
         <div class="row w-100 m-0 south-col">
             <div class="col-12 text-center mt-3 mt-md-5">
-                <div class="bbo-hand">
-                    <div class="hand-header">You (South)</div>
-                    <div class="hand-body">
-                        @foreach (var suit in suits)
-                        {
-                            var cardsInSuit = Model.SouthHand.Where(c => c.Suit == suit).OrderByDescending(c => c.Rank);
-                            <div class="suit-line">
-                                <span class="suit-icon" style="color: @suitColors[suit]">@GetSuitSymbol(suit)</span>
-                                <span class="cards">@(cardsInSuit.Any() ? string.Join("", cardsInSuit.Select(c => GetRankChar(c.Rank))) : "—")</span>
-                            </div>
-                        }
-                    </div>
+                <div class="bbo-hand" style="@(Model.Mode == BridgeGym.Models.ExerciseMode.Distribution ? "max-width: 300px; padding: 20px;" : "")">
+                    @if (Model.Mode == BridgeGym.Models.ExerciseMode.Distribution)
+                    {
+                        <div class="hand-header">Distribution</div>
+                        <div class="hand-body text-center" style="font-size: 2.5rem; letter-spacing: 15px;">
+                            @string.Join("", Model.ShownDistribution)
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="hand-header">You (South)</div>
+                        <div class="hand-body">
+                            @foreach (var suit in suits)
+                            {
+                                var cardsInSuit = Model.SouthHand.Where(c => c.Suit == suit).OrderByDescending(c => c.Rank);
+                                <div class="suit-line">
+                                    <span class="suit-icon" style="color: @suitColors[suit]">@GetSuitSymbol(suit)</span>
+                                    <span class="cards">@(cardsInSuit.Any() ? string.Join("", cardsInSuit.Select(c => GetRankChar(c.Rank))) : "—")</span>
+                                </div>
+                            }
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -234,7 +251,7 @@
     <script>
         let startTime = Date.now();
         let currentSessionTotalTime = @Model.CurrentSessionTotalTime;
-        let expectedHcp = @Model.ExpectedHcp;
+        let expectedAnswer = @Model.ExpectedAnswer;
         
         let timerInterval = setInterval(() => {
             let elapsed = (Date.now() - startTime) / 1000;
@@ -257,12 +274,12 @@
             let newTotalTime = currentSessionTotalTime + handTime;
             
             let correctCount = parseInt(document.getElementById('correctAnswersInput').value);
-            if (answer === expectedHcp) {
+            if (answer === expectedAnswer) {
                 feedback.innerText = "Correct!";
                 feedback.className = "mt-2 text-success fw-bold";
                 correctCount++;
             } else {
-                feedback.innerText = "Incorrect! Expected: " + expectedHcp;
+                feedback.innerText = "Incorrect! Expected: " + expectedAnswer;
                 feedback.className = "mt-2 text-danger fw-bold";
             }
             

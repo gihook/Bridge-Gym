@@ -2,6 +2,7 @@ namespace BridgeGym.Models;
 
 public enum ExerciseMode
 {
-    Simple = 0,
-    Defence = 1,
+    HandHcp = 0,
+    DefenceHcp = 1,
+    Distribution = 2
 }
