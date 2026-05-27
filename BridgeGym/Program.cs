@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using BridgeGym.Data;
 using BridgeGym.Services;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +35,18 @@ builder
 
 builder.Services.AddScoped<IExerciseService, ExerciseService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
+
+builder.Services.AddHangfire(config =>
+    config
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UsePostgreSqlStorage(
+            options => options.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"))
+        )
+);
+
+builder.Services.AddHangfireServer();
 
 // Dynamically discover supported cultures from the Resources folder
 var resourcesPath = Path.Combine(builder.Environment.ContentRootPath, "Resources");
@@ -93,6 +107,8 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseHangfireDashboard();
 
 app.MapRazorPages();
 app.MapControllerRoute(name: "default", pattern: "{controller=Exercise}/{action=Index}/{id?}");

@@ -20,10 +20,13 @@ public class GeminiService : IGeminiService
     public GeminiService(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
-        _apiKey = configuration["GeminiApiKey"] ?? throw new ArgumentNullException("GeminiApiKey is not configured.");
+        _apiKey =
+            configuration["GeminiApiKey"]
+            ?? throw new ArgumentNullException("GeminiApiKey is not configured.");
         var model = configuration["GeminiModel"] ?? "gemini-flash-latest";
         var apiVersion = configuration["GeminiApiVersion"] ?? "v1beta";
-        _baseUrl = $"https://generativelanguage.googleapis.com/{apiVersion}/models/{model}:generateContent";
+        _baseUrl =
+            $"https://generativelanguage.googleapis.com/{apiVersion}/models/{model}:generateContent";
     }
 
     public async Task<List<Card>?> ParseHandImageAsync(byte[] imageBytes)
@@ -38,11 +41,14 @@ public class GeminiService : IGeminiService
                 {
                     parts = new object[]
                     {
-                        new { text = "Identify the 13 bridge cards in this image. Return the result strictly as a JSON array of objects, each with 'Suit' and 'Rank' properties. Suits should be 'Spades', 'Hearts', 'Diamonds', 'Clubs'. Ranks should be 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King', 'Ace'. Do not include any other text or formatting." },
-                        new { inline_data = new { mime_type = "image/jpeg", data = base64Image } }
-                    }
-                }
-            }
+                        new
+                        {
+                            text = "Identify the 13 bridge cards in this image. Return the result strictly as a JSON array of objects, each with 'Suit' and 'Rank' properties. Suits should be 'Spades', 'Hearts', 'Diamonds', 'Clubs'. Ranks should be 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King', 'Ace'. Do not include any other text or formatting.",
+                        },
+                        new { inline_data = new { mime_type = "image/jpeg", data = base64Image } },
+                    },
+                },
+            },
         };
 
         var jsonRequest = JsonSerializer.Serialize(requestBody);
@@ -61,7 +67,8 @@ public class GeminiService : IGeminiService
 
         var textResult = geminiResponse?.Candidates?[0].Content?.Parts?[0].Text;
 
-        if (string.IsNullOrEmpty(textResult)) return null;
+        if (string.IsNullOrEmpty(textResult))
+            return null;
 
         // Clean up markdown if present
         if (textResult.StartsWith("```json"))
@@ -78,7 +85,7 @@ public class GeminiService : IGeminiService
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
-                Converters = { new JsonStringEnumConverter() }
+                Converters = { new JsonStringEnumConverter() },
             };
             return JsonSerializer.Deserialize<List<Card>>(textResult, options);
         }

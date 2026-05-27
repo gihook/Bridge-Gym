@@ -7,4 +7,6 @@ public class BoardHand
     public Board Board { get; set; } = null!;
     public Seat Seat { get; set; }
     public string CardsJson { get; set; } = string.Empty; // List<Card> serialized
+    public HandProcessingStatus Status { get; set; } = HandProcessingStatus.Pending;
+    public string? ErrorMessage { get; set; }
 }

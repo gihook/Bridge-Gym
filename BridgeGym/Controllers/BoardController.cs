@@ -4,9 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using BridgeGym.BackgroundJobs;
 using BridgeGym.Data;
 using BridgeGym.Models.Bridge;
 using BridgeGym.Services;
+using Hangfire;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,19 +18,19 @@ namespace BridgeGym.Controllers;
 public class BoardController : Controller
 {
     private readonly BridgeGymContext _context;
-    private readonly IGeminiService _geminiService;
+    private readonly IBackgroundJobClient _backgroundJobClient;
 
-    public BoardController(BridgeGymContext context, IGeminiService geminiService)
+    public BoardController(BridgeGymContext context, IBackgroundJobClient backgroundJobClient)
     {
         _context = context;
-        _geminiService = geminiService;
+        _backgroundJobClient = backgroundJobClient;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var boards = await _context.Boards
-            .Include(b => b.Hands)
+        var boards = await _context
+            .Boards.Include(b => b.Hands)
             .OrderBy(b => b.BoardNumber)
             .ToListAsync();
         return View(boards);
@@ -37,8 +39,8 @@ public class BoardController : Controller
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
-        var board = await _context.Boards
-            .Include(b => b.Hands)
+        var board = await _context
+            .Boards.Include(b => b.Hands)
             .FirstOrDefaultAsync(b => b.Id == id);
 
         if (board == null)
@@ -64,28 +66,8 @@ public class BoardController : Controller
             return View();
         }
 
-        using var ms = new MemoryStream();
-        await image.CopyToAsync(ms);
-        var imageBytes = ms.ToArray();
-
-        var cards = await _geminiService.ParseHandImageAsync(imageBytes);
-
-        if (cards == null || cards.Count != 13)
-        {
-            ModelState.AddModelError("", $"Failed to identify 13 cards. Identified: {cards?.Count ?? 0}");
-            return View();
-        }
-
-        // Check for duplicates in the identified cards
-        var uniqueCardsCount = cards.GroupBy(c => new { c.Suit, c.Rank }).Count();
-        if (uniqueCardsCount != 13)
-        {
-            ModelState.AddModelError("", "The identified cards contain duplicates.");
-            return View();
-        }
-
-        var board = await _context.Boards
-            .Include(b => b.Hands)
+        var board = await _context
+            .Boards.Include(b => b.Hands)
             .FirstOrDefaultAsync(b => b.BoardNumber == boardNumber);
 
         if (board == null)
@@ -100,66 +82,21 @@ public class BoardController : Controller
             return View();
         }
 
-        // Validate no overlapping cards with existing hands
-        var existingCards = board.Hands
-            .SelectMany(h => JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!)
-            .ToList();
-
-        var overlappingCards = cards.Where(c => existingCards.Any(ec => ec.Suit == c.Suit && ec.Rank == c.Rank)).ToList();
-        if (overlappingCards.Any())
-        {
-            ModelState.AddModelError("", $"Some cards are already present in other hands: {string.Join(", ", overlappingCards.Select(c => c.ToString()))}");
-            return View();
-        }
-
         var newHand = new BoardHand
         {
-            Board = board,
             Seat = seat,
-            CardsJson = JsonSerializer.Serialize(cards)
+            Status = HandProcessingStatus.Pending
         };
-        _context.BoardHands.Add(newHand);
         board.Hands.Add(newHand);
-
-        if (board.Hands.Count == 3)
-        {
-            // Auto-calculate 4th hand
-            var filledSeats = board.Hands.Select(h => h.Seat).ToList();
-            var allSeats = Enum.GetValues(typeof(Seat)).Cast<Seat>();
-            var missingSeat = allSeats.First(s => !filledSeats.Contains(s));
-
-            var existingHands = board.Hands.Select(h => JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!).ToList();
-            var fourthHandCards = CalculateFourthHand(existingHands);
-
-            var fourthHand = new BoardHand
-            {
-                Board = board,
-                Seat = missingSeat,
-                CardsJson = JsonSerializer.Serialize(fourthHandCards)
-            };
-            _context.BoardHands.Add(fourthHand);
-            board.Hands.Add(fourthHand);
-        }
-
         await _context.SaveChangesAsync();
 
+        using var ms = new MemoryStream();
+        await image.CopyToAsync(ms);
+        var imageBytes = ms.ToArray();
+
+        _backgroundJobClient.Enqueue<HandParsingJob>(job => job.ProcessHandImageAsync(newHand.Id, imageBytes));
+
+        Response.StatusCode = 202;
         return RedirectToAction("Details", new { id = board.Id });
-    }
-
-    private List<Card> CalculateFourthHand(List<List<Card>> existingHands)
-    {
-        var allCards = new List<Card>();
-        foreach (Suit suit in Enum.GetValues(typeof(Suit)))
-        {
-            foreach (Rank rank in Enum.GetValues(typeof(Rank)))
-            {
-                allCards.Add(new Card { Suit = suit, Rank = rank });
-            }
-        }
-
-        var usedCards = existingHands.SelectMany(h => h).ToList();
-        var remainingCards = allCards.Where(c => !usedCards.Any(uc => uc.Suit == c.Suit && uc.Rank == c.Rank)).ToList();
-
-        return remainingCards;
     }
 }

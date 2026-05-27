@@ -4,8 +4,6 @@
 @{
     ViewData["Title"] = $"Board {Model.BoardNumber} Details";
 
-    var handsBySeat = Model.Hands.ToDictionary(h => h.Seat, h => JsonSerializer.Deserialize<List<Card>>(h.CardsJson) ?? new List<Card>());
-
     string GetSuitColor(Suit suit) => suit == Suit.Hearts || suit == Suit.Diamonds ? "text-danger" : "text-dark";
     string GetSuitSymbol(Suit suit) => suit switch
     {
@@ -46,6 +44,14 @@
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         min-height: 180px;
+        position: relative;
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        font-size: 0.7rem;
     }
 
     .seat-north { grid-column: 2; grid-row: 1; }
@@ -70,14 +76,30 @@
         font-family: 'Courier New', Courier, monospace;
         font-weight: bold;
     }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.15em;
+    }
 </style>
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Board #@Model.BoardNumber</h2>
         <div>
+            @if (Model.Hands.Any(h => h.Status == HandProcessingStatus.Processing || h.Status == HandProcessingStatus.Pending))
+            {
+                <span class="text-primary me-3">
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                    Processing...
+                </span>
+                <script>
+                    setTimeout(function() { location.reload(); }, 3000);
+                </script>
+            }
             <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
-            @if (Model.Hands.Count < 4)
+            @if (Model.Hands.Count(h => h.Status == HandProcessingStatus.Success) < 4)
             {
                 <a asp-action="Upload" asp-route-boardNumber="@Model.BoardNumber" class="btn btn-primary">Upload Missing Hand</a>
             }
@@ -88,16 +110,39 @@
         @foreach (var seat in Enum.GetValues<Seat>())
         {
             var cssClass = $"seat-{seat.ToString().ToLower()}";
+            var hand = Model.Hands.FirstOrDefault(h => h.Seat == seat);
             <div class="seat-container @cssClass">
                 <h6 class="text-center border-bottom pb-1 mb-2">@seat.ToString()</h6>
-                @if (handsBySeat.ContainsKey(seat))
+                
+                @if (hand != null)
                 {
-                    var cards = handsBySeat[seat].OrderByDescending(c => c.Suit).ThenByDescending(c => c.Rank);
-                    @foreach (var suit in Enum.GetValues<Suit>().OrderByDescending(s => s))
+                    if (hand.Status == HandProcessingStatus.Success)
                     {
-                        var suitCards = cards.Where(c => c.Suit == suit).Select(c => GetRankSymbol(c.Rank));
-                        <div class="suit-row @GetSuitColor(suit)">
-                            @GetSuitSymbol(suit) @(suitCards.Any() ? string.Join(" ", suitCards) : "—")
+                        var cards = JsonSerializer.Deserialize<List<Card>>(hand.CardsJson)?.OrderByDescending(c => c.Suit).ThenByDescending(c => c.Rank) ?? new List<Card>().OrderBy(c => c.Rank);
+                        @foreach (var suit in Enum.GetValues<Suit>().OrderByDescending(s => s))
+                        {
+                            var suitCards = cards.Where(c => c.Suit == suit).Select(c => GetRankSymbol(c.Rank));
+                            <div class="suit-row @GetSuitColor(suit)">
+                                @GetSuitSymbol(suit) @(suitCards.Any() ? string.Join(" ", suitCards) : "—")
+                            </div>
+                        }
+                    }
+                    else if (hand.Status == HandProcessingStatus.Processing || hand.Status == HandProcessingStatus.Pending)
+                    {
+                        <div class="text-center mt-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="text-muted small mt-2">@hand.Status...</p>
+                        </div>
+                    }
+                    else if (hand.Status == HandProcessingStatus.Error)
+                    {
+                        <div class="text-danger text-center mt-2 small">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Error:</strong><br />
+                            @hand.ErrorMessage
+                            <div class="mt-2">
+                                <a asp-action="Upload" asp-route-boardNumber="@Model.BoardNumber" asp-route-seat="@seat" class="btn btn-sm btn-outline-danger">Retry</a>
+                            </div>
                         </div>
                     }
                 }

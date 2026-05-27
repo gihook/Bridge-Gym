@@ -16,7 +16,7 @@
             <select name="seat" id="seat" class="form-select" required>
                 @foreach (var seat in Enum.GetValues(typeof(Seat)))
                 {
-                    <option value="@seat">@seat</option>
+                    <option value="@seat" selected="@(Context.Request.Query["seat"] == seat.ToString())">@seat</option>
                 }
             </select>
         </div>

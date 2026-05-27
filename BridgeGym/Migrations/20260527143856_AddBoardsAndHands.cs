@@ -15,24 +15,33 @@ namespace BridgeGym.Migrations
                 name: "Boards",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    BoardNumber = table.Column<int>(type: "integer", nullable: false)
+                    Id = table
+                        .Column<int>(type: "integer", nullable: false)
+                        .Annotation(
+                            "Npgsql:ValueGenerationStrategy",
+                            NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+                        ),
+                    BoardNumber = table.Column<int>(type: "integer", nullable: false),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Boards", x => x.Id);
-                });
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "BoardHands",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table
+                        .Column<int>(type: "integer", nullable: false)
+                        .Annotation(
+                            "Npgsql:ValueGenerationStrategy",
+                            NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+                        ),
                     BoardId = table.Column<int>(type: "integer", nullable: false),
                     Seat = table.Column<int>(type: "integer", nullable: false),
-                    CardsJson = table.Column<string>(type: "text", nullable: false)
+                    CardsJson = table.Column<string>(type: "text", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -42,23 +51,24 @@ namespace BridgeGym.Migrations
                         column: x => x.BoardId,
                         principalTable: "Boards",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_BoardHands_BoardId",
                 table: "BoardHands",
-                column: "BoardId");
+                column: "BoardId"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "BoardHands");
+            migrationBuilder.DropTable(name: "BoardHands");
 
-            migrationBuilder.DropTable(
-                name: "Boards");
+            migrationBuilder.DropTable(name: "Boards");
         }
     }
 }
