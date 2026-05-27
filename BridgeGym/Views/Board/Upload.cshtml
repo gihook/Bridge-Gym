@@ -1,0 +1,30 @@
+@using BridgeGym.Models.Bridge
+@{
+    ViewData["Title"] = "Upload Hand";
+}
+
+<div class="container mt-4">
+    <h2>Upload Bridge Hand</h2>
+    <hr />
+    <form asp-action="Upload" method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="boardNumber" class="form-label">Board Number</label>
+            <input type="number" name="boardNumber" id="boardNumber" class="form-control" required min="1" value="@Context.Request.Query["boardNumber"]" />
+        </div>
+        <div class="mb-3">
+            <label for="seat" class="form-label">Player Seat</label>
+            <select name="seat" id="seat" class="form-select" required>
+                @foreach (var seat in Enum.GetValues(typeof(Seat)))
+                {
+                    <option value="@seat">@seat</option>
+                }
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="image" class="form-label">Hand Image</label>
+            <input type="file" name="image" id="image" class="form-control" accept="image/*" required />
+        </div>
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <button type="submit" class="btn btn-primary">Upload and Parse</button>
+    </form>
+</div>

@@ -32,6 +32,7 @@ builder
     .AddEntityFrameworkStores<BridgeGymContext>();
 
 builder.Services.AddScoped<IExerciseService, ExerciseService>();
+builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 
 // Dynamically discover supported cultures from the Resources folder
 var resourcesPath = Path.Combine(builder.Environment.ContentRootPath, "Resources");
