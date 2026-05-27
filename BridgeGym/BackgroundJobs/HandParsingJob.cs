@@ -17,7 +17,11 @@ public class HandParsingJob
     private readonly IGeminiService _geminiService;
     private readonly ILogger<HandParsingJob> _logger;
 
-    public HandParsingJob(BridgeGymContext context, IGeminiService geminiService, ILogger<HandParsingJob> logger)
+    public HandParsingJob(
+        BridgeGymContext context,
+        IGeminiService geminiService,
+        ILogger<HandParsingJob> logger
+    )
     {
         _context = context;
         _geminiService = geminiService;
@@ -26,7 +30,10 @@ public class HandParsingJob
 
     public async Task ProcessHandImageAsync(int boardHandId, byte[] imageBytes)
     {
-        var hand = await _context.BoardHands.Include(h => h.Board).ThenInclude(b => b.Hands).FirstOrDefaultAsync(h => h.Id == boardHandId);
+        var hand = await _context
+            .BoardHands.Include(h => h.Board)
+                .ThenInclude(b => b.Hands)
+            .FirstOrDefaultAsync(h => h.Id == boardHandId);
         if (hand == null)
         {
             _logger.LogError("Hand not found: {Id}", boardHandId);
@@ -57,16 +64,21 @@ public class HandParsingJob
                 else
                 {
                     // Check for overlaps
-                    var existingCards = hand.Board.Hands
-                        .Where(h => h.Id != hand.Id && h.Status == HandProcessingStatus.Success)
+                    var existingCards = hand
+                        .Board.Hands.Where(h =>
+                            h.Id != hand.Id && h.Status == HandProcessingStatus.Success
+                        )
                         .SelectMany(h => JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!)
                         .ToList();
 
-                    var overlappingCards = cards.Where(c => existingCards.Any(ec => ec.Suit == c.Suit && ec.Rank == c.Rank)).ToList();
+                    var overlappingCards = cards
+                        .Where(c => existingCards.Any(ec => ec.Suit == c.Suit && ec.Rank == c.Rank))
+                        .ToList();
                     if (overlappingCards.Any())
                     {
                         hand.Status = HandProcessingStatus.Error;
-                        hand.ErrorMessage = $"Some cards are already present in other hands: {string.Join(", ", overlappingCards.Select(c => c.ToString()))}";
+                        hand.ErrorMessage =
+                            $"Some cards are already present in other hands: {string.Join(", ", overlappingCards.Select(c => c.ToString()))}";
                     }
                     else
                     {
@@ -75,9 +87,13 @@ public class HandParsingJob
 
                         // Check if we can auto-calculate 4th hand
                         // Refresh board hands from DB to be sure
-                        var board = await _context.Boards.Include(b => b.Hands).FirstAsync(b => b.Id == hand.BoardId);
-                        var successHands = board.Hands.Where(h => h.Status == HandProcessingStatus.Success).ToList();
-                        
+                        var board = await _context
+                            .Boards.Include(b => b.Hands)
+                            .FirstAsync(b => b.Id == hand.BoardId);
+                        var successHands = board
+                            .Hands.Where(h => h.Status == HandProcessingStatus.Success)
+                            .ToList();
+
                         if (successHands.Count == 3)
                         {
                             var filledSeats = successHands.Select(h => h.Seat).ToList();
@@ -86,14 +102,18 @@ public class HandParsingJob
 
                             if (!board.Hands.Any(h => h.Seat == missingSeat))
                             {
-                                var existingHandsList = successHands.Select(h => JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!).ToList();
+                                var existingHandsList = successHands
+                                    .Select(h =>
+                                        JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!
+                                    )
+                                    .ToList();
                                 var fourthHandCards = CalculateFourthHand(existingHandsList);
 
                                 var fourthHand = new BoardHand
                                 {
                                     Seat = missingSeat,
                                     CardsJson = JsonSerializer.Serialize(fourthHandCards),
-                                    Status = HandProcessingStatus.Success
+                                    Status = HandProcessingStatus.Success,
                                 };
                                 board.Hands.Add(fourthHand);
                             }
@@ -124,7 +144,9 @@ public class HandParsingJob
         }
 
         var usedCards = existingHands.SelectMany(h => h).ToList();
-        var remainingCards = allCards.Where(c => !usedCards.Any(uc => uc.Suit == c.Suit && uc.Rank == c.Rank)).ToList();
+        var remainingCards = allCards
+            .Where(c => !usedCards.Any(uc => uc.Suit == c.Suit && uc.Rank == c.Rank))
+            .ToList();
 
         return remainingCards;
     }

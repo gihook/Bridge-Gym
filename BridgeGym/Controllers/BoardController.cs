@@ -82,11 +82,7 @@ public class BoardController : Controller
             return View();
         }
 
-        var newHand = new BoardHand
-        {
-            Seat = seat,
-            Status = HandProcessingStatus.Pending
-        };
+        var newHand = new BoardHand { Seat = seat, Status = HandProcessingStatus.Pending };
         board.Hands.Add(newHand);
         await _context.SaveChangesAsync();
 
@@ -94,7 +90,9 @@ public class BoardController : Controller
         await image.CopyToAsync(ms);
         var imageBytes = ms.ToArray();
 
-        _backgroundJobClient.Enqueue<HandParsingJob>(job => job.ProcessHandImageAsync(newHand.Id, imageBytes));
+        _backgroundJobClient.Enqueue<HandParsingJob>(job =>
+            job.ProcessHandImageAsync(newHand.Id, imageBytes)
+        );
 
         Response.StatusCode = 202;
         return RedirectToAction("Details", new { id = board.Id });

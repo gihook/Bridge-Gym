@@ -41,8 +41,10 @@ builder.Services.AddHangfire(config =>
         .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
         .UseSimpleAssemblyNameTypeSerializer()
         .UseRecommendedSerializerSettings()
-        .UsePostgreSqlStorage(
-            options => options.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"))
+        .UsePostgreSqlStorage(options =>
+            options.UseNpgsqlConnection(
+                builder.Configuration.GetConnectionString("DefaultConnection")
+            )
         )
 );
 

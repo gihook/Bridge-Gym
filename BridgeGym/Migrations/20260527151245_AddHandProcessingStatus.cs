@@ -14,26 +14,24 @@ namespace BridgeGym.Migrations
                 name: "ErrorMessage",
                 table: "BoardHands",
                 type: "text",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<int>(
                 name: "Status",
                 table: "BoardHands",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 0
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "ErrorMessage",
-                table: "BoardHands");
+            migrationBuilder.DropColumn(name: "ErrorMessage", table: "BoardHands");
 
-            migrationBuilder.DropColumn(
-                name: "Status",
-                table: "BoardHands");
+            migrationBuilder.DropColumn(name: "Status", table: "BoardHands");
         }
     }
 }
