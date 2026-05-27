@@ -1,0 +1,156 @@
+@using BridgeGym.Models.Bridge
+@model List<BridgeGym.Models.Bridge.Card>
+@{
+    ViewData["Title"] = $"Edit Board {ViewBag.BoardNumber} - {ViewBag.Seat}";
+    var otherCards = (List<Card>)ViewBag.OtherHandsCards;
+    
+    string GetSuitSymbol(Suit suit) => suit switch { Suit.Spades => "♠", Suit.Hearts => "♥", Suit.Diamonds => "♦", Suit.Clubs => "♣", _ => "" };
+    string GetRankSymbol(Rank rank) => rank switch { Rank.Ten => "10", Rank.Jack => "J", Rank.Queen => "Q", Rank.King => "K", Rank.Ace => "A", _ => ((int)rank).ToString() };
+    string GetSuitColor(Suit suit) => suit == Suit.Hearts || suit == Suit.Diamonds ? "text-danger" : "text-dark";
+}
+
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Boards</a></li>
+        <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@ViewBag.BoardId">Board #@ViewBag.BoardNumber</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Edit @ViewBag.Seat</li>
+      </ol>
+    </nav>
+
+    <h2>Edit Board #@ViewBag.BoardNumber - @ViewBag.Seat</h2>
+    <hr />
+
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Select 13 Cards</h5>
+            <div class="h5 mb-0">
+                <span id="selected-count" class="badge bg-primary">0</span> <span class="text-muted">/ 13</span>
+            </div>
+        </div>
+        <div class="card-body">
+            @foreach (Suit suit in Enum.GetValues<Suit>().OrderByDescending(s => s))
+            {
+                <div class="row mb-3 align-items-center">
+                    <div class="col-md-1 text-center">
+                        <span class="h2 @GetSuitColor(suit)">@GetSuitSymbol(suit)</span>
+                    </div>
+                    <div class="col-md-11">
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (Rank rank in Enum.GetValues<Rank>().OrderByDescending(r => r))
+                            {
+                                var isSelected = Model.Any(c => c.Suit == suit && c.Rank == rank);
+                                var isOther = otherCards.Any(c => c.Suit == suit && c.Rank == rank);
+                                var btnId = $"btn-{(int)suit}-{(int)rank}";
+                                
+                                <button type="button" 
+                                        id="@btnId"
+                                        class="btn btn-outline-secondary card-btn @(isSelected ? "active btn-primary" : "") @(isOther ? "disabled-card" : "")"
+                                        data-suit="@((int)suit)" 
+                                        data-rank="@((int)rank)"
+                                        onclick="toggleCard(this)"
+                                        @(isOther ? "disabled title='Already in another hand'" : "")>
+                                    @GetRankSymbol(rank)
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <form asp-action="Edit" method="post" id="edit-form">
+        <div id="hidden-inputs">
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <input type="hidden" name="cards[@i].Suit" value="@((int)Model[i].Suit)" />
+                <input type="hidden" name="cards[@i].Rank" value="@((int)Model[i].Rank)" />
+            }
+        </div>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-success btn-lg" id="save-btn" disabled>Save Changes</button>
+            <a asp-action="Details" asp-route-id="@ViewBag.BoardId" class="btn btn-outline-secondary btn-lg">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleCard(btn) {
+            if (btn.classList.contains('disabled-card')) return;
+            
+            btn.classList.toggle('active');
+            btn.classList.toggle('btn-primary');
+            btn.classList.toggle('btn-outline-secondary');
+            
+            updateHiddenInputs();
+        }
+
+        function updateHiddenInputs() {
+            const activeBtns = document.querySelectorAll('.card-btn.active');
+            const count = activeBtns.length;
+            document.getElementById('selected-count').innerText = count;
+            
+            const container = document.getElementById('hidden-inputs');
+            container.innerHTML = '';
+            
+            activeBtns.forEach((btn, index) => {
+                const suit = btn.getAttribute('data-suit');
+                const rank = btn.getAttribute('data-rank');
+                
+                const suitInput = document.createElement('input');
+                suitInput.type = 'hidden';
+                suitInput.name = `cards[${index}].Suit`;
+                suitInput.value = suit;
+                
+                const rankInput = document.createElement('input');
+                rankInput.type = 'hidden';
+                rankInput.name = `cards[${index}].Rank`;
+                rankInput.value = rank;
+                
+                container.appendChild(suitInput);
+                container.appendChild(rankInput);
+            });
+            
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.disabled = (count !== 13);
+            if (count === 13) {
+                saveBtn.classList.remove('btn-secondary');
+                saveBtn.classList.add('btn-success');
+            } else {
+                saveBtn.classList.remove('btn-success');
+                saveBtn.classList.add('btn-secondary');
+            }
+        }
+
+        // Initialize count on page load
+        document.addEventListener('DOMContentLoaded', updateHiddenInputs);
+    </script>
+    <style>
+        .card-btn {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.1s ease;
+        }
+        .card-btn:hover:not(.disabled-card) {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+        .disabled-card {
+            background-color: #e9ecef !important;
+            color: #adb5bd !important;
+            cursor: not-allowed;
+            opacity: 0.5;
+            border-color: #dee2e6 !important;
+        }
+    </style>
+}

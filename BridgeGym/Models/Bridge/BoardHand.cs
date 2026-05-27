@@ -9,4 +9,5 @@ public class BoardHand
     public string CardsJson { get; set; } = string.Empty; // List<Card> serialized
     public HandProcessingStatus Status { get; set; } = HandProcessingStatus.Pending;
     public string? ErrorMessage { get; set; }
+    public bool IsAutoCalculated { get; set; }
 }

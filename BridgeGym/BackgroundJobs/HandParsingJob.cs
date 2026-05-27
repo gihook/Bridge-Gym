@@ -68,7 +68,9 @@ public class HandParsingJob
                         .Board.Hands.Where(h =>
                             h.Id != hand.Id && h.Status == HandProcessingStatus.Success
                         )
-                        .SelectMany(h => JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!)
+                        .SelectMany(h => string.IsNullOrEmpty(h.CardsJson) 
+                            ? new List<Card>() 
+                            : JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!)
                         .ToList();
 
                     var overlappingCards = cards
@@ -85,37 +87,46 @@ public class HandParsingJob
                         hand.CardsJson = JsonSerializer.Serialize(cards);
                         hand.Status = HandProcessingStatus.Success;
 
-                        // Check if we can auto-calculate 4th hand
                         // Refresh board hands from DB to be sure
                         var board = await _context
                             .Boards.Include(b => b.Hands)
                             .FirstAsync(b => b.Id == hand.BoardId);
-                        var successHands = board
-                            .Hands.Where(h => h.Status == HandProcessingStatus.Success)
+                        
+                        var manualHands = board.Hands
+                            .Where(h => !h.IsAutoCalculated && h.Status == HandProcessingStatus.Success)
                             .ToList();
 
-                        if (successHands.Count == 3)
+                        if (manualHands.Count == 3)
                         {
-                            var filledSeats = successHands.Select(h => h.Seat).ToList();
+                            var filledSeats = manualHands.Select(h => h.Seat).ToList();
                             var allSeats = Enum.GetValues(typeof(Seat)).Cast<Seat>();
                             var missingSeat = allSeats.First(s => !filledSeats.Contains(s));
 
-                            if (!board.Hands.Any(h => h.Seat == missingSeat))
-                            {
-                                var existingHandsList = successHands
-                                    .Select(h =>
-                                        JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!
-                                    )
-                                    .ToList();
-                                var fourthHandCards = CalculateFourthHand(existingHandsList);
+                            var existingHandsList = manualHands
+                                .Select(h => JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!)
+                                .ToList();
+                            var fourthHandCards = Board.CalculateFourthHand(existingHandsList);
 
-                                var fourthHand = new BoardHand
+                            var autoHand = board.Hands.FirstOrDefault(h => h.IsAutoCalculated);
+                            if (autoHand == null)
+                            {
+                                if (!board.Hands.Any(h => h.Seat == missingSeat))
                                 {
-                                    Seat = missingSeat,
-                                    CardsJson = JsonSerializer.Serialize(fourthHandCards),
-                                    Status = HandProcessingStatus.Success,
-                                };
-                                board.Hands.Add(fourthHand);
+                                    var fourthHand = new BoardHand
+                                    {
+                                        Seat = missingSeat,
+                                        CardsJson = JsonSerializer.Serialize(fourthHandCards),
+                                        Status = HandProcessingStatus.Success,
+                                        IsAutoCalculated = true,
+                                    };
+                                    board.Hands.Add(fourthHand);
+                                }
+                            }
+                            else
+                            {
+                                autoHand.Seat = missingSeat;
+                                autoHand.CardsJson = JsonSerializer.Serialize(fourthHandCards);
+                                autoHand.Status = HandProcessingStatus.Success;
                             }
                         }
                     }
@@ -130,24 +141,5 @@ public class HandParsingJob
         }
 
         await _context.SaveChangesAsync();
-    }
-
-    private List<Card> CalculateFourthHand(List<List<Card>> existingHands)
-    {
-        var allCards = new List<Card>();
-        foreach (Suit suit in Enum.GetValues(typeof(Suit)))
-        {
-            foreach (Rank rank in Enum.GetValues(typeof(Rank)))
-            {
-                allCards.Add(new Card { Suit = suit, Rank = rank });
-            }
-        }
-
-        var usedCards = existingHands.SelectMany(h => h).ToList();
-        var remainingCards = allCards
-            .Where(c => !usedCards.Any(uc => uc.Suit == c.Suit && uc.Rank == c.Rank))
-            .ToList();
-
-        return remainingCards;
     }
 }
