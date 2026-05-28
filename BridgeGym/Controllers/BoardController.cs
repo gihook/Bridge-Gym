@@ -296,8 +296,8 @@ public class BoardController : Controller
     [HttpPost]
     public async Task<IActionResult> SwapHands(int boardId, Seat seat1, Seat seat2)
     {
-        var board = await _context.Boards
-            .Include(b => b.Hands)
+        var board = await _context
+            .Boards.Include(b => b.Hands)
             .FirstOrDefaultAsync(b => b.Id == boardId);
 
         if (board == null)
