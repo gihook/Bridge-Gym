@@ -60,7 +60,12 @@ public class BoardController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Upload(int boardSetId, int boardNumber, Seat seat, IFormFile image)
+    public async Task<IActionResult> Upload(
+        int boardSetId,
+        int boardNumber,
+        Seat seat,
+        IFormFile image
+    )
     {
         if (image == null || image.Length == 0)
         {
@@ -112,11 +117,59 @@ public class BoardController : Controller
         var imageBytes = ms.ToArray();
 
         _backgroundJobClient.Enqueue<HandParsingJob>(job =>
-            job.ProcessHandImageAsync(hand.Id, imageBytes)
+            job.ProcessHandImageAsync(hand.Id, imageBytes, null!)
         );
 
         Response.StatusCode = 202;
         return RedirectToAction("Details", new { id = board.Id });
+    }
+
+    [HttpGet]
+    public IActionResult UploadDiagram(int boardSetId)
+    {
+        if (boardSetId == 0)
+        {
+            return RedirectToAction("Index", "BoardSet");
+        }
+        ViewBag.BoardSetId = boardSetId;
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UploadDiagram(int boardSetId, List<IFormFile> images)
+    {
+        if (images == null || !images.Any())
+        {
+            ModelState.AddModelError("", "Please select at least one image.");
+            ViewBag.BoardSetId = boardSetId;
+            return View();
+        }
+
+        var boardSet = await _context.BoardSets.FindAsync(boardSetId);
+        if (boardSet == null)
+        {
+            return NotFound("Board set not found.");
+        }
+
+        var allImageBytes = new List<byte[]>();
+        foreach (var image in images)
+        {
+            if (image.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await image.CopyToAsync(ms);
+                allImageBytes.Add(ms.ToArray());
+            }
+        }
+
+        if (allImageBytes.Any())
+        {
+            _backgroundJobClient.Enqueue<BoardParsingJob>(job =>
+                job.ProcessBoardDiagramsAsync(boardSetId, allImageBytes, null!)
+            );
+        }
+
+        return RedirectToAction("Details", "BoardSet", new { id = boardSetId });
     }
 
     [HttpGet]

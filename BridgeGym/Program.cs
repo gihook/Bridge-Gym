@@ -4,6 +4,7 @@ using System.Linq;
 using BridgeGym.Data;
 using BridgeGym.Services;
 using Hangfire;
+using Hangfire.Console;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
@@ -41,6 +42,7 @@ builder.Services.AddHangfire(config =>
         .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
         .UseSimpleAssemblyNameTypeSerializer()
         .UseRecommendedSerializerSettings()
+        .UseConsole()
         .UsePostgreSqlStorage(options =>
             options.UseNpgsqlConnection(
                 builder.Configuration.GetConnectionString("DefaultConnection")

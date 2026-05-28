@@ -10,6 +10,7 @@
             <p class="text-muted">Created on @Model.CreatedAt.ToLocalTime().ToString("g")</p>
         </div>
         <div>
+            <a asp-controller="Board" asp-action="UploadDiagram" asp-route-boardSetId="@Model.Id" class="btn btn-primary">Upload Diagrams</a>
             <a asp-controller="Board" asp-action="Upload" asp-route-boardSetId="@Model.Id" class="btn btn-success">Upload New Hand</a>
             <a asp-action="Index" class="btn btn-secondary">Back to List</a>
         </div>

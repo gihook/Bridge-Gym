@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using BridgeGym.Data;
 using BridgeGym.Models.Bridge;
 using BridgeGym.Services;
+using Hangfire.Console;
+using Hangfire.Server;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -28,7 +30,7 @@ public class HandParsingJob
         _logger = logger;
     }
 
-    public async Task ProcessHandImageAsync(int boardHandId, byte[] imageBytes)
+    public async Task ProcessHandImageAsync(int boardHandId, byte[] imageBytes, PerformContext context)
     {
         var hand = await _context
             .BoardHands.Include(h => h.Board)
@@ -37,29 +39,36 @@ public class HandParsingJob
         if (hand == null)
         {
             _logger.LogError("Hand not found: {Id}", boardHandId);
+            context.WriteLine($"Error: Hand not found {boardHandId}");
             return;
         }
+
+        context.WriteLine($"Processing hand for board #{hand.Board.BoardNumber}, seat {hand.Seat}");
 
         hand.Status = HandProcessingStatus.Processing;
         await _context.SaveChangesAsync();
 
         try
         {
-            var cards = await _geminiService.ParseHandImageAsync(imageBytes);
+            using var imageStream = new MemoryStream(imageBytes);
+            var cards = await _geminiService.ParseHandImageAsync(imageStream);
 
             if (cards == null || cards.Count != 13)
             {
                 hand.Status = HandProcessingStatus.Error;
                 hand.ErrorMessage = $"Failed to identify 13 cards. Identified: {cards?.Count ?? 0}";
+                context.WriteLine($"Error: {hand.ErrorMessage}");
             }
             else
             {
+                context.WriteLine($"Parsed cards: {string.Join(", ", cards)}");
                 // Check for duplicates
                 var uniqueCardsCount = cards.GroupBy(c => new { c.Suit, c.Rank }).Count();
                 if (uniqueCardsCount != 13)
                 {
                     hand.Status = HandProcessingStatus.Error;
                     hand.ErrorMessage = "The identified cards contain duplicates.";
+                    context.WriteLine("Error: Duplicate cards identified.");
                 }
                 else
                 {
@@ -83,11 +92,13 @@ public class HandParsingJob
                         hand.Status = HandProcessingStatus.Error;
                         hand.ErrorMessage =
                             $"Some cards are already present in other hands: {string.Join(", ", overlappingCards.Select(c => c.ToString()))}";
+                        context.WriteLine($"Error: {hand.ErrorMessage}");
                     }
                     else
                     {
                         hand.CardsJson = JsonSerializer.Serialize(cards);
                         hand.Status = HandProcessingStatus.Success;
+                        context.WriteLine("Hand successfully updated.");
 
                         // Refresh board hands from DB to be sure
                         var board = await _context
@@ -105,6 +116,8 @@ public class HandParsingJob
                             var filledSeats = manualHands.Select(h => h.Seat).ToList();
                             var allSeats = Enum.GetValues(typeof(Seat)).Cast<Seat>();
                             var missingSeat = allSeats.First(s => !filledSeats.Contains(s));
+
+                            context.WriteLine($"3 hands filled. Calculating 4th hand for {missingSeat}...");
 
                             var existingHandsList = manualHands
                                 .Select(h => JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!)
@@ -124,6 +137,7 @@ public class HandParsingJob
                                         IsAutoCalculated = true,
                                     };
                                     board.Hands.Add(fourthHand);
+                                    context.WriteLine($"Auto-calculated 4th hand for {missingSeat}.");
                                 }
                             }
                             else
@@ -131,6 +145,7 @@ public class HandParsingJob
                                 autoHand.Seat = missingSeat;
                                 autoHand.CardsJson = JsonSerializer.Serialize(fourthHandCards);
                                 autoHand.Status = HandProcessingStatus.Success;
+                                context.WriteLine($"Updated auto-calculated 4th hand for {missingSeat}.");
                             }
                         }
                     }
@@ -140,6 +155,7 @@ public class HandParsingJob
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing hand {Id}", boardHandId);
+            context.WriteLine($"Exception: {ex.Message}");
             hand.Status = HandProcessingStatus.Error;
             hand.ErrorMessage = ex.Message;
         }

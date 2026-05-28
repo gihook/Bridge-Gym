@@ -19,8 +19,8 @@ public class BoardSetController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var boardSets = await _context.BoardSets
-            .Include(bs => bs.Boards)
+        var boardSets = await _context
+            .BoardSets.Include(bs => bs.Boards)
             .OrderByDescending(bs => bs.CreatedAt)
             .ToListAsync();
         return View(boardSets);
@@ -28,8 +28,8 @@ public class BoardSetController : Controller
 
     public async Task<IActionResult> Details(int id)
     {
-        var boardSet = await _context.BoardSets
-            .Include(bs => bs.Boards)
+        var boardSet = await _context
+            .BoardSets.Include(bs => bs.Boards)
             .FirstOrDefaultAsync(m => m.Id == id);
 
         if (boardSet == null)
