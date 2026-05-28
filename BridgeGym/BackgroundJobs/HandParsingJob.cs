@@ -68,9 +68,11 @@ public class HandParsingJob
                         .Board.Hands.Where(h =>
                             h.Id != hand.Id && h.Status == HandProcessingStatus.Success
                         )
-                        .SelectMany(h => string.IsNullOrEmpty(h.CardsJson) 
-                            ? new List<Card>() 
-                            : JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!)
+                        .SelectMany(h =>
+                            string.IsNullOrEmpty(h.CardsJson)
+                                ? new List<Card>()
+                                : JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!
+                        )
                         .ToList();
 
                     var overlappingCards = cards
@@ -91,9 +93,11 @@ public class HandParsingJob
                         var board = await _context
                             .Boards.Include(b => b.Hands)
                             .FirstAsync(b => b.Id == hand.BoardId);
-                        
-                        var manualHands = board.Hands
-                            .Where(h => !h.IsAutoCalculated && h.Status == HandProcessingStatus.Success)
+
+                        var manualHands = board
+                            .Hands.Where(h =>
+                                !h.IsAutoCalculated && h.Status == HandProcessingStatus.Success
+                            )
                             .ToList();
 
                         if (manualHands.Count == 3)

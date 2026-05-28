@@ -27,13 +27,9 @@ public class BoardController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public IActionResult Index()
     {
-        var boards = await _context
-            .Boards.Include(b => b.Hands)
-            .OrderBy(b => b.BoardNumber)
-            .ToListAsync();
-        return View(boards);
+        return RedirectToAction("Index", "BoardSet");
     }
 
     [HttpGet]
@@ -41,6 +37,7 @@ public class BoardController : Controller
     {
         var board = await _context
             .Boards.Include(b => b.Hands)
+            .Include(b => b.BoardSet)
             .FirstOrDefaultAsync(b => b.Id == id);
 
         if (board == null)
@@ -52,27 +49,39 @@ public class BoardController : Controller
     }
 
     [HttpGet]
-    public IActionResult Upload()
+    public IActionResult Upload(int boardSetId)
     {
+        if (boardSetId == 0)
+        {
+            return RedirectToAction("Index", "BoardSet");
+        }
+        ViewBag.BoardSetId = boardSetId;
         return View();
     }
 
     [HttpPost]
-    public async Task<IActionResult> Upload(int boardNumber, Seat seat, IFormFile image)
+    public async Task<IActionResult> Upload(int boardSetId, int boardNumber, Seat seat, IFormFile image)
     {
         if (image == null || image.Length == 0)
         {
             ModelState.AddModelError("", "Please select an image.");
+            ViewBag.BoardSetId = boardSetId;
             return View();
+        }
+
+        var boardSet = await _context.BoardSets.FindAsync(boardSetId);
+        if (boardSet == null)
+        {
+            return NotFound("Board set not found.");
         }
 
         var board = await _context
             .Boards.Include(b => b.Hands)
-            .FirstOrDefaultAsync(b => b.BoardNumber == boardNumber);
+            .FirstOrDefaultAsync(b => b.BoardSetId == boardSetId && b.BoardNumber == boardNumber);
 
         if (board == null)
         {
-            board = new Board { BoardNumber = boardNumber };
+            board = new Board { BoardNumber = boardNumber, BoardSetId = boardSetId };
             _context.Boards.Add(board);
         }
 
@@ -179,7 +188,10 @@ public class BoardController : Controller
 
         if (overlappingCards.Any())
         {
-            ModelState.AddModelError("", $"Some cards are already present in other hands: {string.Join(", ", overlappingCards.Select(c => c.ToString()))}");
+            ModelState.AddModelError(
+                "",
+                $"Some cards are already present in other hands: {string.Join(", ", overlappingCards.Select(c => c.ToString()))}"
+            );
             ViewBag.BoardNumber = hand.Board.BoardNumber;
             ViewBag.BoardId = hand.BoardId;
             ViewBag.Seat = hand.Seat;
@@ -202,11 +214,11 @@ public class BoardController : Controller
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
-        var hand = await _context.BoardHands
-            .Include(h => h.Board)
+        var hand = await _context
+            .BoardHands.Include(h => h.Board)
                 .ThenInclude(b => b.Hands)
             .FirstOrDefaultAsync(h => h.Id == id);
-            
+
         if (hand == null)
         {
             return NotFound();
@@ -214,15 +226,15 @@ public class BoardController : Controller
 
         var boardId = hand.BoardId;
         var board = hand.Board;
-        
+
         _context.BoardHands.Remove(hand);
-        
+
         // After deleting a manual hand, we might need to remove or update the auto-calculated one
         if (!hand.IsAutoCalculated)
         {
             EnsureAutoHand(board);
         }
-        
+
         await _context.SaveChangesAsync();
 
         return RedirectToAction("Details", new { id = boardId });
@@ -230,8 +242,8 @@ public class BoardController : Controller
 
     private void EnsureAutoHand(Board board)
     {
-        var manualHands = board.Hands
-            .Where(h => !h.IsAutoCalculated && h.Status == HandProcessingStatus.Success)
+        var manualHands = board
+            .Hands.Where(h => !h.IsAutoCalculated && h.Status == HandProcessingStatus.Success)
             .ToList();
 
         var autoHand = board.Hands.FirstOrDefault(h => h.IsAutoCalculated);
@@ -258,7 +270,7 @@ public class BoardController : Controller
                         CardsJson = JsonSerializer.Serialize(fourthHandCards),
                         Status = HandProcessingStatus.Success,
                         IsAutoCalculated = true,
-                        BoardId = board.Id
+                        BoardId = board.Id,
                     };
                     _context.BoardHands.Add(autoHand);
                 }
@@ -278,11 +290,13 @@ public class BoardController : Controller
 
     private List<Card> GetOtherHandsCards(BoardHand hand)
     {
-        return hand.Board.Hands
-            .Where(h => h.Id != hand.Id && h.Status == HandProcessingStatus.Success)
-            .SelectMany(h => string.IsNullOrEmpty(h.CardsJson)
-                ? new List<Card>()
-                : JsonSerializer.Deserialize<List<Card>>(h.CardsJson) ?? new List<Card>())
+        return hand
+            .Board.Hands.Where(h => h.Id != hand.Id && h.Status == HandProcessingStatus.Success)
+            .SelectMany(h =>
+                string.IsNullOrEmpty(h.CardsJson)
+                    ? new List<Card>()
+                    : JsonSerializer.Deserialize<List<Card>>(h.CardsJson) ?? new List<Card>()
+            )
             .ToList();
     }
 }

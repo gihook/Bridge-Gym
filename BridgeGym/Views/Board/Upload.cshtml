@@ -7,6 +7,7 @@
     <h2>Upload Bridge Hand</h2>
     <hr />
     <form asp-action="Upload" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="boardSetId" value="@ViewBag.BoardSetId" />
         <div class="mb-3">
             <label for="boardNumber" class="form-label">Board Number</label>
             <input type="number" name="boardNumber" id="boardNumber" class="form-control" required min="1" value="@Context.Request.Query["boardNumber"]" />

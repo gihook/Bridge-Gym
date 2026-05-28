@@ -15,15 +15,14 @@ namespace BridgeGym.Migrations
                 table: "BoardHands",
                 type: "boolean",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: false
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "IsAutoCalculated",
-                table: "BoardHands");
+            migrationBuilder.DropColumn(name: "IsAutoCalculated", table: "BoardHands");
         }
     }
 }

@@ -11,6 +11,7 @@ public class BridgeGymContext : IdentityDbContext
         : base(options) { }
 
     public DbSet<GameSession> GameSessions { get; set; } = null!;
+    public DbSet<BoardSet> BoardSets { get; set; } = null!;
     public DbSet<Board> Boards { get; set; } = null!;
     public DbSet<BoardHand> BoardHands { get; set; } = null!;
 }

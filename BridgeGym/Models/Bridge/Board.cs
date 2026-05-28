@@ -5,6 +5,8 @@ namespace BridgeGym.Models.Bridge;
 public class Board
 {
     public int Id { get; set; }
+    public int BoardSetId { get; set; }
+    public BoardSet BoardSet { get; set; } = null!;
     public int BoardNumber { get; set; }
     public List<BoardHand> Hands { get; set; } = new();
 
