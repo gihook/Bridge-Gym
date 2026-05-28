@@ -30,7 +30,11 @@ public class HandParsingJob
         _logger = logger;
     }
 
-    public async Task ProcessHandImageAsync(int boardHandId, byte[] imageBytes, PerformContext context)
+    public async Task ProcessHandImageAsync(
+        int boardHandId,
+        byte[] imageBytes,
+        PerformContext context
+    )
     {
         var hand = await _context
             .BoardHands.Include(h => h.Board)
@@ -117,7 +121,9 @@ public class HandParsingJob
                             var allSeats = Enum.GetValues(typeof(Seat)).Cast<Seat>();
                             var missingSeat = allSeats.First(s => !filledSeats.Contains(s));
 
-                            context.WriteLine($"3 hands filled. Calculating 4th hand for {missingSeat}...");
+                            context.WriteLine(
+                                $"3 hands filled. Calculating 4th hand for {missingSeat}..."
+                            );
 
                             var existingHandsList = manualHands
                                 .Select(h => JsonSerializer.Deserialize<List<Card>>(h.CardsJson)!)
@@ -137,7 +143,9 @@ public class HandParsingJob
                                         IsAutoCalculated = true,
                                     };
                                     board.Hands.Add(fourthHand);
-                                    context.WriteLine($"Auto-calculated 4th hand for {missingSeat}.");
+                                    context.WriteLine(
+                                        $"Auto-calculated 4th hand for {missingSeat}."
+                                    );
                                 }
                             }
                             else
@@ -145,7 +153,9 @@ public class HandParsingJob
                                 autoHand.Seat = missingSeat;
                                 autoHand.CardsJson = JsonSerializer.Serialize(fourthHandCards);
                                 autoHand.Status = HandProcessingStatus.Success;
-                                context.WriteLine($"Updated auto-calculated 4th hand for {missingSeat}.");
+                                context.WriteLine(
+                                    $"Updated auto-calculated 4th hand for {missingSeat}."
+                                );
                             }
                         }
                     }

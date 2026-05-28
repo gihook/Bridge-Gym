@@ -30,7 +30,11 @@ public class BoardParsingJob
         _logger = logger;
     }
 
-    public async Task ProcessBoardDiagramsAsync(int boardSetId, List<byte[]> imagesBytes, PerformContext context)
+    public async Task ProcessBoardDiagramsAsync(
+        int boardSetId,
+        List<byte[]> imagesBytes,
+        PerformContext context
+    )
     {
         var boardSet = await _context.BoardSets.FindAsync(boardSetId);
         if (boardSet == null)
@@ -40,7 +44,9 @@ public class BoardParsingJob
             return;
         }
 
-        context.WriteLine($"Processing {imagesBytes.Count} board diagrams for set: {boardSet.Name}");
+        context.WriteLine(
+            $"Processing {imagesBytes.Count} board diagrams for set: {boardSet.Name}"
+        );
 
         try
         {
@@ -55,7 +61,9 @@ public class BoardParsingJob
             if (results == null || !results.Any())
             {
                 _logger.LogError("Failed to parse board diagrams for set {Id}", boardSetId);
-                context.WriteLine("Error: Gemini failed to parse the diagrams or returned no results.");
+                context.WriteLine(
+                    "Error: Gemini failed to parse the diagrams or returned no results."
+                );
                 return;
             }
 
@@ -64,9 +72,11 @@ public class BoardParsingJob
             foreach (var result in results)
             {
                 // Find or create board
-                var board = await _context.Boards
-                    .Include(b => b.Hands)
-                    .FirstOrDefaultAsync(b => b.BoardSetId == boardSetId && b.BoardNumber == result.BoardNumber);
+                var board = await _context
+                    .Boards.Include(b => b.Hands)
+                    .FirstOrDefaultAsync(b =>
+                        b.BoardSetId == boardSetId && b.BoardNumber == result.BoardNumber
+                    );
 
                 if (board == null)
                 {
@@ -96,7 +106,11 @@ public class BoardParsingJob
         }
     }
 
-    public async Task ProcessBoardDiagramAsync(int boardSetId, byte[] imageBytes, PerformContext context)
+    public async Task ProcessBoardDiagramAsync(
+        int boardSetId,
+        byte[] imageBytes,
+        PerformContext context
+    )
     {
         await ProcessBoardDiagramsAsync(boardSetId, new List<byte[]> { imageBytes }, context);
     }
@@ -105,9 +119,16 @@ public class BoardParsingJob
     {
         if (cards == null || cards.Count != 13)
         {
-             _logger.LogWarning("Invalid card count for {Seat} in board {BoardNumber}: {Count}", seat, board.BoardNumber, cards?.Count ?? 0);
-             context.WriteLine($"Warning: {seat} has {cards?.Count ?? 0} cards (expected 13). Skipping.");
-             return;
+            _logger.LogWarning(
+                "Invalid card count for {Seat} in board {BoardNumber}: {Count}",
+                seat,
+                board.BoardNumber,
+                cards?.Count ?? 0
+            );
+            context.WriteLine(
+                $"Warning: {seat} has {cards?.Count ?? 0} cards (expected 13). Skipping."
+            );
+            return;
         }
 
         var hand = board.Hands.FirstOrDefault(h => h.Seat == seat);

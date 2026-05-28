@@ -178,12 +178,15 @@ Do not include any other text or formatting.",
         }
     }
 
-    public async Task<List<BoardDiagramParseResult>?> ParseBoardDiagramsAsync(IEnumerable<Stream> imageStreams)
+    public async Task<List<BoardDiagramParseResult>?> ParseBoardDiagramsAsync(
+        IEnumerable<Stream> imageStreams
+    )
     {
         var parts = new List<object>();
-        parts.Add(new
-        {
-            text = @"Identify the bridge board diagrams in these images. 
+        parts.Add(
+            new
+            {
+                text = @"Identify the bridge board diagrams in these images. 
 For each diagram found, extract the board number and the 13 cards for each seat (North, South, East, West).
 Return the results strictly as a JSON array of objects, where each object has this structure:
 {
@@ -196,25 +199,26 @@ Return the results strictly as a JSON array of objects, where each object has th
 Suits should be 'Spades', 'Hearts', 'Diamonds', 'Clubs'. 
 Ranks should be 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King', 'Ace'. 
 Do not include any other text or formatting. Just return the JSON array.",
-        });
+            }
+        );
 
         foreach (var imageStream in imageStreams)
         {
             using var ms = new MemoryStream();
             await imageStream.CopyToAsync(ms);
-            parts.Add(new { inline_data = new { mime_type = "image/jpeg", data = Convert.ToBase64String(ms.ToArray()) } });
-        }
-
-        var requestBody = new
-        {
-            contents = new[]
-            {
+            parts.Add(
                 new
                 {
-                    parts = parts.ToArray(),
-                },
-            },
-        };
+                    inline_data = new
+                    {
+                        mime_type = "image/jpeg",
+                        data = Convert.ToBase64String(ms.ToArray()),
+                    },
+                }
+            );
+        }
+
+        var requestBody = new { contents = new[] { new { parts = parts.ToArray() } } };
 
         var jsonRequest = JsonSerializer.Serialize(requestBody);
         var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");

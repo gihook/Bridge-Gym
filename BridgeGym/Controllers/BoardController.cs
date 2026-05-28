@@ -293,6 +293,67 @@ public class BoardController : Controller
         return RedirectToAction("Details", new { id = boardId });
     }
 
+    [HttpPost]
+    public async Task<IActionResult> SwapHands(int boardId, Seat seat1, Seat seat2)
+    {
+        var board = await _context.Boards
+            .Include(b => b.Hands)
+            .FirstOrDefaultAsync(b => b.Id == boardId);
+
+        if (board == null)
+        {
+            return NotFound();
+        }
+
+        if (seat1 == seat2)
+        {
+            return RedirectToAction("Details", new { id = boardId });
+        }
+
+        var hand1 = board.Hands.FirstOrDefault(h => h.Seat == seat1);
+        var hand2 = board.Hands.FirstOrDefault(h => h.Seat == seat2);
+
+        if (hand1 == null && hand2 == null)
+        {
+            // Nothing to swap
+            return RedirectToAction("Details", new { id = boardId });
+        }
+
+        if (hand1 != null && hand2 != null)
+        {
+            // Swap all properties between hands
+            var tempCards = hand1.CardsJson;
+            var tempStatus = hand1.Status;
+            var tempError = hand1.ErrorMessage;
+            var tempIsAuto = hand1.IsAutoCalculated;
+
+            hand1.CardsJson = hand2.CardsJson;
+            hand1.Status = hand2.Status;
+            hand1.ErrorMessage = hand2.ErrorMessage;
+            hand1.IsAutoCalculated = hand2.IsAutoCalculated;
+
+            hand2.CardsJson = tempCards;
+            hand2.Status = tempStatus;
+            hand2.ErrorMessage = tempError;
+            hand2.IsAutoCalculated = tempIsAuto;
+        }
+        else if (hand1 != null)
+        {
+            // Only hand1 exists, move it to seat2
+            hand1.Seat = seat2;
+        }
+        else if (hand2 != null)
+        {
+            // Only hand2 exists, move it to seat1
+            hand2.Seat = seat1;
+        }
+
+        EnsureAutoHand(board);
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction("Details", new { id = boardId });
+    }
+
     private void EnsureAutoHand(Board board)
     {
         var manualHands = board

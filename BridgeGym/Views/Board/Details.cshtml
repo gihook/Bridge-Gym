@@ -111,6 +111,50 @@
             {
                 <a asp-action="Upload" asp-route-boardSetId="@Model.BoardSetId" asp-route-boardNumber="@Model.BoardNumber" class="btn btn-primary">Upload Missing Hand</a>
             }
+            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#swapHandsModal">
+                <i class="bi bi-arrow-left-right"></i> Swap Hands
+            </button>
+        </div>
+    </div>
+
+    <!-- Swap Hands Modal -->
+    <div class="modal fade" id="swapHandsModal" tabindex="-1" aria-labelledby="swapHandsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="SwapHands" method="post">
+                    <input type="hidden" name="boardId" value="@Model.Id" />
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="swapHandsModalLabel">Swap Hands</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label">First Seat</label>
+                                <select name="seat1" class="form-select">
+                                    @foreach (var seat in Enum.GetValues<Seat>())
+                                    {
+                                        <option value="@seat">@seat</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Second Seat</label>
+                                <select name="seat2" class="form-select">
+                                    @foreach (var seat in Enum.GetValues<Seat>())
+                                    {
+                                        <option value="@seat" selected="@(seat == Seat.East)">@seat</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-warning">Swap</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
