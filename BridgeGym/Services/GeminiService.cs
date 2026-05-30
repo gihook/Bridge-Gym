@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using BridgeGym.Models.Bridge;
-using Microsoft.Extensions.Configuration;
 
 namespace BridgeGym.Services;
 
@@ -16,6 +10,9 @@ public class GeminiService : IGeminiService
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
     private readonly string _baseUrl;
+    private readonly string _parseHandImagePrompt;
+    private readonly string _parseBoardDiagramPrompt;
+    private readonly string _parseBoardDiagramsPrompt;
 
     public GeminiService(HttpClient httpClient, IConfiguration configuration)
     {
@@ -27,6 +24,11 @@ public class GeminiService : IGeminiService
         var apiVersion = configuration["GeminiApiVersion"] ?? "v1beta";
         _baseUrl =
             $"https://generativelanguage.googleapis.com/{apiVersion}/models/{model}:generateContent";
+
+        var promptPath = Path.Combine(AppContext.BaseDirectory, "ConfigurationPrompts");
+        _parseHandImagePrompt = File.ReadAllText(Path.Combine(promptPath, "ParseHandImagePrompt.txt"));
+        _parseBoardDiagramPrompt = File.ReadAllText(Path.Combine(promptPath, "ParseBoardDiagramPrompt.txt"));
+        _parseBoardDiagramsPrompt = File.ReadAllText(Path.Combine(promptPath, "ParseBoardDiagramsPrompt.txt"));
     }
 
     public async Task<List<Card>?> ParseHandImageAsync(Stream imageStream)
@@ -34,6 +36,17 @@ public class GeminiService : IGeminiService
         using var ms = new MemoryStream();
         await imageStream.CopyToAsync(ms);
         var base64Image = Convert.ToBase64String(ms.ToArray());
+
+        var cardSchema = new
+        {
+            type = "object",
+            properties = new
+            {
+                Suit = new { type = "string", @enum = new[] { "Spades", "Hearts", "Diamonds", "Clubs" } },
+                Rank = new { type = "string", @enum = new[] { "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace" } }
+            },
+            required = new[] { "Suit", "Rank" }
+        };
 
         var requestBody = new
         {
@@ -45,12 +58,21 @@ public class GeminiService : IGeminiService
                     {
                         new
                         {
-                            text = "Identify the 13 bridge cards in this image. Return the result strictly as a JSON array of objects, each with 'Suit' and 'Rank' properties. Suits should be 'Spades', 'Hearts', 'Diamonds', 'Clubs'. Ranks should be 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King', 'Ace'. Do not include any other text or formatting.",
+                            text = _parseHandImagePrompt,
                         },
                         new { inline_data = new { mime_type = "image/jpeg", data = base64Image } },
                     },
                 },
             },
+            generationConfig = new
+            {
+                response_mime_type = "application/json",
+                response_schema = new
+                {
+                    type = "array",
+                    items = cardSchema
+                }
+            }
         };
 
         var jsonRequest = JsonSerializer.Serialize(requestBody);
@@ -71,16 +93,6 @@ public class GeminiService : IGeminiService
 
         if (string.IsNullOrEmpty(textResult))
             return null;
-
-        // Clean up markdown if present
-        if (textResult.StartsWith("```json"))
-        {
-            textResult = textResult.Replace("```json", "").Replace("```", "").Trim();
-        }
-        else if (textResult.StartsWith("```"))
-        {
-            textResult = textResult.Replace("```", "").Trim();
-        }
 
         try
         {
@@ -103,6 +115,17 @@ public class GeminiService : IGeminiService
         await imageStream.CopyToAsync(ms);
         var base64Image = Convert.ToBase64String(ms.ToArray());
 
+        var cardSchema = new
+        {
+            type = "object",
+            properties = new
+            {
+                Suit = new { type = "string", @enum = new[] { "Spades", "Hearts", "Diamonds", "Clubs" } },
+                Rank = new { type = "string", @enum = new[] { "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace" } }
+            },
+            required = new[] { "Suit", "Rank" }
+        };
+
         var requestBody = new
         {
             contents = new[]
@@ -113,24 +136,29 @@ public class GeminiService : IGeminiService
                     {
                         new
                         {
-                            text = @"Identify the bridge board diagram in this image. 
-Extract the board number and the 13 cards for each seat (North, South, East, West).
-Return the result strictly as a JSON object with the following structure:
-{
-  ""BoardNumber"": number,
-  ""North"": [{""Suit"": ""..."", ""Rank"": ""...""}, ...],
-  ""South"": [...],
-  ""East"": [...],
-  ""West"": [...]
-}
-Suits should be 'Spades', 'Hearts', 'Diamonds', 'Clubs'. 
-Ranks should be 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King', 'Ace'. 
-Do not include any other text or formatting.",
+                            text = _parseBoardDiagramPrompt,
                         },
                         new { inline_data = new { mime_type = "image/jpeg", data = base64Image } },
                     },
                 },
             },
+            generationConfig = new
+            {
+                response_mime_type = "application/json",
+                response_schema = new
+                {
+                    type = "object",
+                    properties = new
+                    {
+                        BoardNumber = new { type = "integer" },
+                        North = new { type = "array", items = cardSchema },
+                        South = new { type = "array", items = cardSchema },
+                        East = new { type = "array", items = cardSchema },
+                        West = new { type = "array", items = cardSchema }
+                    },
+                    required = new[] { "BoardNumber", "North", "South", "East", "West" }
+                }
+            }
         };
 
         var jsonRequest = JsonSerializer.Serialize(requestBody);
@@ -152,16 +180,6 @@ Do not include any other text or formatting.",
         if (string.IsNullOrEmpty(textResult))
             return null;
 
-        // Clean up markdown if present
-        if (textResult.StartsWith("```json"))
-        {
-            textResult = textResult.Replace("```json", "").Replace("```", "").Trim();
-        }
-        else if (textResult.StartsWith("```"))
-        {
-            textResult = textResult.Replace("```", "").Trim();
-        }
-
         try
         {
             var options = new JsonSerializerOptions
@@ -182,23 +200,36 @@ Do not include any other text or formatting.",
         IEnumerable<Stream> imageStreams
     )
     {
+        var cardSchema = new
+        {
+            type = "object",
+            properties = new
+            {
+                Suit = new { type = "string", @enum = new[] { "Spades", "Hearts", "Diamonds", "Clubs" } },
+                Rank = new { type = "string", @enum = new[] { "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace" } }
+            },
+            required = new[] { "Suit", "Rank" }
+        };
+
+        var boardSchema = new
+        {
+            type = "object",
+            properties = new
+            {
+                BoardNumber = new { type = "integer" },
+                North = new { type = "array", items = cardSchema },
+                South = new { type = "array", items = cardSchema },
+                East = new { type = "array", items = cardSchema },
+                West = new { type = "array", items = cardSchema }
+            },
+            required = new[] { "BoardNumber", "North", "South", "East", "West" }
+        };
+
         var parts = new List<object>();
         parts.Add(
             new
             {
-                text = @"Identify the bridge board diagrams in these images. 
-For each diagram found, extract the board number and the 13 cards for each seat (North, South, East, West).
-Return the results strictly as a JSON array of objects, where each object has this structure:
-{
-  ""BoardNumber"": number,
-  ""North"": [{""Suit"": ""..."", ""Rank"": ""...""}, ...],
-  ""South"": [...],
-  ""East"": [...],
-  ""West"": [...]
-}
-Suits should be 'Spades', 'Hearts', 'Diamonds', 'Clubs'. 
-Ranks should be 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King', 'Ace'. 
-Do not include any other text or formatting. Just return the JSON array.",
+                text = _parseBoardDiagramsPrompt,
             }
         );
 
@@ -218,7 +249,19 @@ Do not include any other text or formatting. Just return the JSON array.",
             );
         }
 
-        var requestBody = new { contents = new[] { new { parts = parts.ToArray() } } };
+        var requestBody = new
+        {
+            contents = new[] { new { parts = parts.ToArray() } },
+            generationConfig = new
+            {
+                response_mime_type = "application/json",
+                response_schema = new
+                {
+                    type = "array",
+                    items = boardSchema
+                }
+            }
+        };
 
         var jsonRequest = JsonSerializer.Serialize(requestBody);
         var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
@@ -238,16 +281,6 @@ Do not include any other text or formatting. Just return the JSON array.",
 
         if (string.IsNullOrEmpty(textResult))
             return null;
-
-        // Clean up markdown if present
-        if (textResult.StartsWith("```json"))
-        {
-            textResult = textResult.Replace("```json", "").Replace("```", "").Trim();
-        }
-        else if (textResult.StartsWith("```"))
-        {
-            textResult = textResult.Replace("```", "").Trim();
-        }
 
         try
         {

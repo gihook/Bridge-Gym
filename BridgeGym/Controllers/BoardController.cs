@@ -267,6 +267,22 @@ public class BoardController : Controller
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
+        var board = await _context.Boards.FindAsync(id);
+        if (board == null)
+        {
+            return NotFound();
+        }
+
+        var boardSetId = board.BoardSetId;
+        _context.Boards.Remove(board);
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction("Details", "BoardSet", new { id = boardSetId });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteHand(int id)
+    {
         var hand = await _context
             .BoardHands.Include(h => h.Board)
                 .ThenInclude(b => b.Hands)

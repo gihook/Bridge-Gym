@@ -1,0 +1,12 @@
+You are an expert at reading bridge board diagrams.
+Identify the bridge board diagram in the provided image.
+Extract the board number and the exact 13 cards held by each of the four seats (North, South, East, West).
+
+Important Context:
+- Suits are often represented by symbols (♠, ♥, ♦, ♣) or letters (S, H, D, C).
+- Ranks are typically 2, 3, 4, 5, 6, 7, 8, 9, T (or 10), J (Jack), Q (Queen), K (King), A (Ace).
+- Diagrams usually show North at the top, South at the bottom, West on the left, and East on the right.
+- Ensure exactly 13 unique cards are found for each seat. A standard deck has 52 cards total.
+- Map the extracted data to the required enum string values:
+  - Suits: 'Spades', 'Hearts', 'Diamonds', 'Clubs'
+  - Ranks: 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King', 'Ace'

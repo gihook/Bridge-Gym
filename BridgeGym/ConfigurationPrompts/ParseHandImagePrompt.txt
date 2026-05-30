@@ -1,0 +1,5 @@
+Identify the 13 bridge cards in this image.
+Ensure exactly 13 unique cards are found.
+Map the extracted data to the required enum string values:
+- Suits: 'Spades', 'Hearts', 'Diamonds', 'Clubs'
+- Ranks: 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King', 'Ace'
