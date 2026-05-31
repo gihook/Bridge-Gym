@@ -26,9 +26,15 @@ public class GeminiService : IGeminiService
             $"https://generativelanguage.googleapis.com/{apiVersion}/models/{model}:generateContent";
 
         var promptPath = Path.Combine(AppContext.BaseDirectory, "ConfigurationPrompts");
-        _parseHandImagePrompt = File.ReadAllText(Path.Combine(promptPath, "ParseHandImagePrompt.txt"));
-        _parseBoardDiagramPrompt = File.ReadAllText(Path.Combine(promptPath, "ParseBoardDiagramPrompt.txt"));
-        _parseBoardDiagramsPrompt = File.ReadAllText(Path.Combine(promptPath, "ParseBoardDiagramsPrompt.txt"));
+        _parseHandImagePrompt = File.ReadAllText(
+            Path.Combine(promptPath, "ParseHandImagePrompt.txt")
+        );
+        _parseBoardDiagramPrompt = File.ReadAllText(
+            Path.Combine(promptPath, "ParseBoardDiagramPrompt.txt")
+        );
+        _parseBoardDiagramsPrompt = File.ReadAllText(
+            Path.Combine(promptPath, "ParseBoardDiagramsPrompt.txt")
+        );
     }
 
     public async Task<List<Card>?> ParseHandImageAsync(Stream imageStream)
@@ -42,10 +48,33 @@ public class GeminiService : IGeminiService
             type = "object",
             properties = new
             {
-                Suit = new { type = "string", @enum = new[] { "Spades", "Hearts", "Diamonds", "Clubs" } },
-                Rank = new { type = "string", @enum = new[] { "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace" } }
+                Suit = new
+                {
+                    type = "string",
+                    @enum = new[] { "Spades", "Hearts", "Diamonds", "Clubs" },
+                },
+                Rank = new
+                {
+                    type = "string",
+                    @enum = new[]
+                    {
+                        "Two",
+                        "Three",
+                        "Four",
+                        "Five",
+                        "Six",
+                        "Seven",
+                        "Eight",
+                        "Nine",
+                        "Ten",
+                        "Jack",
+                        "Queen",
+                        "King",
+                        "Ace",
+                    },
+                },
             },
-            required = new[] { "Suit", "Rank" }
+            required = new[] { "Suit", "Rank" },
         };
 
         var requestBody = new
@@ -56,10 +85,7 @@ public class GeminiService : IGeminiService
                 {
                     parts = new object[]
                     {
-                        new
-                        {
-                            text = _parseHandImagePrompt,
-                        },
+                        new { text = _parseHandImagePrompt },
                         new { inline_data = new { mime_type = "image/jpeg", data = base64Image } },
                     },
                 },
@@ -67,12 +93,8 @@ public class GeminiService : IGeminiService
             generationConfig = new
             {
                 response_mime_type = "application/json",
-                response_schema = new
-                {
-                    type = "array",
-                    items = cardSchema
-                }
-            }
+                response_schema = new { type = "array", items = cardSchema },
+            },
         };
 
         var jsonRequest = JsonSerializer.Serialize(requestBody);
@@ -120,10 +142,33 @@ public class GeminiService : IGeminiService
             type = "object",
             properties = new
             {
-                Suit = new { type = "string", @enum = new[] { "Spades", "Hearts", "Diamonds", "Clubs" } },
-                Rank = new { type = "string", @enum = new[] { "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace" } }
+                Suit = new
+                {
+                    type = "string",
+                    @enum = new[] { "Spades", "Hearts", "Diamonds", "Clubs" },
+                },
+                Rank = new
+                {
+                    type = "string",
+                    @enum = new[]
+                    {
+                        "Two",
+                        "Three",
+                        "Four",
+                        "Five",
+                        "Six",
+                        "Seven",
+                        "Eight",
+                        "Nine",
+                        "Ten",
+                        "Jack",
+                        "Queen",
+                        "King",
+                        "Ace",
+                    },
+                },
             },
-            required = new[] { "Suit", "Rank" }
+            required = new[] { "Suit", "Rank" },
         };
 
         var requestBody = new
@@ -134,10 +179,7 @@ public class GeminiService : IGeminiService
                 {
                     parts = new object[]
                     {
-                        new
-                        {
-                            text = _parseBoardDiagramPrompt,
-                        },
+                        new { text = _parseBoardDiagramPrompt },
                         new { inline_data = new { mime_type = "image/jpeg", data = base64Image } },
                     },
                 },
@@ -154,11 +196,11 @@ public class GeminiService : IGeminiService
                         North = new { type = "array", items = cardSchema },
                         South = new { type = "array", items = cardSchema },
                         East = new { type = "array", items = cardSchema },
-                        West = new { type = "array", items = cardSchema }
+                        West = new { type = "array", items = cardSchema },
                     },
-                    required = new[] { "BoardNumber", "North", "South", "East", "West" }
-                }
-            }
+                    required = new[] { "BoardNumber", "North", "South", "East", "West" },
+                },
+            },
         };
 
         var jsonRequest = JsonSerializer.Serialize(requestBody);
@@ -205,10 +247,33 @@ public class GeminiService : IGeminiService
             type = "object",
             properties = new
             {
-                Suit = new { type = "string", @enum = new[] { "Spades", "Hearts", "Diamonds", "Clubs" } },
-                Rank = new { type = "string", @enum = new[] { "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace" } }
+                Suit = new
+                {
+                    type = "string",
+                    @enum = new[] { "Spades", "Hearts", "Diamonds", "Clubs" },
+                },
+                Rank = new
+                {
+                    type = "string",
+                    @enum = new[]
+                    {
+                        "Two",
+                        "Three",
+                        "Four",
+                        "Five",
+                        "Six",
+                        "Seven",
+                        "Eight",
+                        "Nine",
+                        "Ten",
+                        "Jack",
+                        "Queen",
+                        "King",
+                        "Ace",
+                    },
+                },
             },
-            required = new[] { "Suit", "Rank" }
+            required = new[] { "Suit", "Rank" },
         };
 
         var boardSchema = new
@@ -220,18 +285,13 @@ public class GeminiService : IGeminiService
                 North = new { type = "array", items = cardSchema },
                 South = new { type = "array", items = cardSchema },
                 East = new { type = "array", items = cardSchema },
-                West = new { type = "array", items = cardSchema }
+                West = new { type = "array", items = cardSchema },
             },
-            required = new[] { "BoardNumber", "North", "South", "East", "West" }
+            required = new[] { "BoardNumber", "North", "South", "East", "West" },
         };
 
         var parts = new List<object>();
-        parts.Add(
-            new
-            {
-                text = _parseBoardDiagramsPrompt,
-            }
-        );
+        parts.Add(new { text = _parseBoardDiagramsPrompt });
 
         foreach (var imageStream in imageStreams)
         {
@@ -255,12 +315,8 @@ public class GeminiService : IGeminiService
             generationConfig = new
             {
                 response_mime_type = "application/json",
-                response_schema = new
-                {
-                    type = "array",
-                    items = boardSchema
-                }
-            }
+                response_schema = new { type = "array", items = boardSchema },
+            },
         };
 
         var jsonRequest = JsonSerializer.Serialize(requestBody);

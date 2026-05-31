@@ -35,12 +35,14 @@ builder
     .AddEntityFrameworkStores<BridgeGymContext>();
 
 builder.Services.AddScoped<IExerciseService, ExerciseService>();
-builder.Services.AddHttpClient<IGeminiService, GeminiService>((serviceProvider, client) =>
-{
-    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    var timeoutSeconds = configuration.GetValue<int>("GeminiTimeoutSeconds", 200);
-    client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
-});
+builder.Services.AddHttpClient<IGeminiService, GeminiService>(
+    (serviceProvider, client) =>
+    {
+        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+        var timeoutSeconds = configuration.GetValue<int>("GeminiTimeoutSeconds", 200);
+        client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+    }
+);
 
 builder.Services.AddHangfire(config =>
     config

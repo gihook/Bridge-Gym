@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using BridgeGym.Data;
 using BridgeGym.Models.Bridge;
@@ -38,6 +40,50 @@ public class BoardSetController : Controller
         }
 
         return View(boardSet);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Export(int id)
+    {
+        var boardSet = await _context.BoardSets
+            .Include(bs => bs.Boards)
+            .ThenInclude(b => b.Hands)
+            .FirstOrDefaultAsync(m => m.Id == id);
+
+        if (boardSet == null)
+        {
+            return NotFound();
+        }
+
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Converters = { new JsonStringEnumConverter() }
+        };
+
+        var exportData = new
+        {
+            boardSet.Name,
+            boardSet.CreatedAt,
+            Boards = boardSet.Boards.OrderBy(b => b.BoardNumber).Select(b => new
+            {
+                b.BoardNumber,
+                Hands = b.Hands.OrderBy(h => h.Seat).Select(h => new
+                {
+                    h.Seat,
+                    Cards = string.IsNullOrEmpty(h.CardsJson)
+                        ? null
+                        : JsonSerializer.Deserialize<List<Card>>(h.CardsJson, options)?
+                            .Select(c => new { c.Suit, c.Rank }),
+                    h.Status,
+                    h.IsAutoCalculated
+                })
+            })
+        };
+
+        var json = JsonSerializer.Serialize(exportData, options);
+        var fileName = $"{boardSet.Name.Replace(" ", "_")}_export.json";
+        return File(System.Text.Encoding.UTF8.GetBytes(json), "application/json", fileName);
     }
 
     [HttpGet]
